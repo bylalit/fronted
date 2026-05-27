@@ -12,16 +12,18 @@ import Checkout from './pages/Checkout'
 import Register from './pages/Register'
 import Login from './pages/Login'
 import UserAcoount from './pages/UserAcoount'
+import { useState } from 'react'
 
 function App() {
 
+  const [search, setSearch] = useState("")
   return (
     <>
-        <Navbar />
+        <Navbar setSearch={setSearch} />
         <Routes>
           <Route path='/' element={<Home />} />
           <Route path='/about' element={<About />} />
-          <Route path='/category' element={<Category />} />
+          <Route path='/category' element={<Category search={search} />} />
           <Route path='/productDetails/:id' element={<ProductDetails />} />
           <Route path='/cart' element={<Cart />} />
           <Route path='/checkout' element={<Checkout />} />

@@ -1,8 +1,10 @@
+import { useState } from "react";
 import LeftSide from "../components/CategoryPageComp/LeftSide";
 import RightSide from "../components/CategoryPageComp/RightSide";
 
 
-const Category = () => {
+const Category = ({search}) => {
+  const [category, setCategory] = useState("");
 
   return (
     <>
@@ -28,9 +30,10 @@ const Category = () => {
         <div className="container px-md-5 mt-5" >
           <div className="row g-4">
             
-            <LeftSide />
+            <LeftSide setCategory={setCategory} />
 
-            <RightSide />
+            <RightSide search={search} category= {category} setCategory={setCategory} />
+            
 
 
           </div>

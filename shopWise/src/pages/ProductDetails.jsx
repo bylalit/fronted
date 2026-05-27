@@ -69,7 +69,7 @@ const ProductDetails = () => {
           fontFamily: "'Poppins', sans-serif",
         }}
       >
-        {/* ================= 1. BREADCRUMB HEADER SECTION ================= */}
+        {/*  1. BREADCRUMB HEADER SECTION  */}
         <div
           className="py-4 border-bottom"
           style={{ backgroundColor: "#F8FAFC" }}
@@ -103,7 +103,7 @@ const ProductDetails = () => {
           </div>
         </div>
 
-        {/* ================= 2. CORE BUYING CONTROLS FRAMEWORK ================= */}
+        {/*  2. CORE BUYING CONTROLS FRAMEWORK */}
         <div className="container px-md-5 mt-5">
           <div className="row g-5">
             {/* LEFT ROW: Gallery Multi-Image Workspace Panel */}

@@ -1,15 +1,24 @@
 import  { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import 'bootstrap-icons/font/bootstrap-icons.css';
 
-const Navbar = () => {
+const Navbar = ({ setSearch }) => {
   // Dropdowns visibility tracking conditional states
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [showCartDropdown, setShowCartDropdown] = useState(false);
 
+  const navigate = useNavigate();
+
   // References to handle click-away dismissals
   const userRef = useRef(null);
   const cartRef = useRef(null);
+
+  const [input, setInput] = useState("");
+
+  const searchProduct = async()=> {
+      setSearch(input);
+      navigate('/category');
+  }
 
   // Mock Active Drawer Cart Items Layout from asset data array mockup
   const miniCartItems = [
@@ -90,20 +99,23 @@ const Navbar = () => {
 
             {/* Search Bar */}
             <div className="col-10 col-md-6 col-lg-5">
-              <div className="input-group border rounded-2" style={{ overflow: 'hidden' }}>
-                <span className="input-group-text bg-white border-0 text-muted pe-1">
-                  <i className="bi bi-search"></i>
-                </span>
-                <input 
-                  type="text" 
-                  className="form-control border-0 shadow-none ps-2" 
-                  placeholder="Search for products, brands, and more..." 
-                  aria-label="Search"
-                />
-                <button className="btn btn-success px-4 fw-medium border-0" style={{ backgroundColor: '#0aa586' }} type="button">
-                  Search
-                </button>
-              </div>
+                {/* <form action="" method="get"> */}
+                  <div className="input-group border rounded-2" style={{ overflow: 'hidden' }}>
+                      <span className="input-group-text bg-white border-0 text-muted pe-1">
+                        <i className="bi bi-search"></i>
+                      </span>
+                      <input 
+                        type="text"
+                        onChange={(event) => setInput(event.target.value)}
+                        className="form-control border-0 shadow-none ps-2" 
+                        placeholder="Search for products, brands, and more..." 
+                        aria-label="Search"
+                      />
+                      <button className="btn btn-success px-4 fw-medium border-0" onClick={searchProduct} style={{ backgroundColor: '#0aa586' }} type="button">
+                        Search
+                      </button>
+                  </div>
+                {/* </form> */}
             </div>
 
             {/* Action Toggles Area Framework */}
@@ -227,7 +239,7 @@ const Navbar = () => {
               <li className="nav-item"><Link className="nav-link text-success active fw-semibold" to="/">Home</Link></li>
               <li className="nav-item"><Link className="nav-link" to="/about">About</Link></li>
               <li className="nav-item"><Link className="nav-link" to="/category">Category</Link></li>
-              <li className="nav-item"><Link className="nav-link" to="/productDetails">Product Details</Link></li>
+              {/* <li className="nav-item"><Link className="nav-link" to="/productDetails">Product Details</Link></li> */}
               <li className="nav-item"><Link className="nav-link" to="/cart">Cart</Link></li>
               <li className="nav-item"><Link className="nav-link" to="/checkout">Checkout</Link></li>
               <li className="nav-item dropdown"><a className="nav-link dropdown-toggle" href="#dropdown" role="button" data-bs-toggle="dropdown">Dropdown</a></li>

@@ -1,12 +1,34 @@
-import React from 'react';
+import { useEffect, useState } from 'react';
 
-const LeftSide = () => {
+const LeftSide = ({setCategory}) => {
     const colors = ["#000000", "#ffffff", "#EF4444", "#3B82F6", "#22C55E", "#EAB308", "#A855F7", "#F97316", "#EC4899", "#78350F"];
+    
     const brands = [
         { name: "Nike", count: 24 }, { name: "Adidas", count: 18 }, { name: "Puma", count: 12 },
         { name: "Reebok", count: 9 }, { name: "Under Armour", count: 7 }, { name: "New Balance", count: 6 },
         { name: "Converse", count: 5 }, { name: "Vans", count: 4 }
     ];
+
+    const url = "http://127.0.0.1:8000/api/category/";
+    const [openCategory, setOpenCategory] = useState(null);
+    const [categories, setCategories] = useState();
+
+
+    const getCategory = async()=> {
+        let response = await fetch(url);
+        response = await response.json();
+
+        // console.log(response);
+        setCategories(response);
+    }
+
+    const fileterByCategory = (id) => {
+        setCategory(id);  
+    }
+
+    useEffect(() => {
+        getCategory();
+    }, [])
 
   return (
     <>
@@ -14,7 +36,7 @@ const LeftSide = () => {
         <div className="col-12 col-lg-4">
             
             {/* 1. Category Tree Card */}
-            <div className="card border-0 p-4 rounded-3 mb-4 shadow-sm border" style={{ backgroundColor: '#F8FAFC' }}>
+            {/* <div className="card border-0 p-4 rounded-3 mb-4 shadow-sm border" style={{ backgroundColor: '#F8FAFC' }}>
             <h5 className="fw-bold mb-4 border-start border-4 border-success ps-2" style={{ color: '#0F2C59', fontSize: '18px' }}>Categories</h5>
             
             <div className="d-flex flex-column gap-3" style={{ fontSize: '15px' }}>
@@ -50,6 +72,91 @@ const LeftSide = () => {
                 </React.Fragment>
                 ))}
             </div>
+            </div> */}
+            {/* Category Card */}
+            <div
+            className="card border-0 p-4 rounded-3 mb-4 shadow-sm border"
+            style={{ backgroundColor: '#F8FAFC' }}
+            >
+
+            <h5
+                className="fw-bold mb-4 border-start border-4 border-success ps-2"
+                style={{ color: '#0F2C59', fontSize: '18px' }}
+            >
+                Categories
+            </h5>
+
+            <div className="d-flex flex-column gap-3">
+
+                {/* Parent Categories */}
+                {categories?.filter((cat) => cat.parent === null)
+                .map((parentCategory) => (
+
+                    <div key={parentCategory.id}>
+
+                    {/* Parent */}
+                    <div
+                        className="d-flex justify-content-between align-items-center mb-2"
+                        style={{ cursor: "pointer" }}
+                        onClick={() =>
+                        setOpenCategory(
+                            openCategory === parentCategory.id
+                            ? null
+                            : parentCategory.id
+                        )
+                        }
+                    >
+
+                        <span className="fw-bold text-dark">
+                        {parentCategory.name}
+                        </span>
+
+                        <i
+                        className={`bi ${
+                            openCategory === parentCategory.id
+                            ? "bi-chevron-up"
+                            : "bi-chevron-down"
+                        }`}
+                        ></i>
+
+                    </div>
+
+                    {/* Child Categories */}
+                    {openCategory === parentCategory.id && (
+
+                        <div className="d-flex flex-column gap-2 ps-3">
+
+                        {categories
+                            ?.filter((child) =>
+                            child.parent?.includes(
+                                `/category/${parentCategory.id}/`
+                            )
+                            )
+                            .map((childCategory) => (
+
+                            <span
+                                key={childCategory.id}
+                                className="text-muted"
+                                style={{ cursor: "pointer" }}
+                                onClick={()=> fileterByCategory(childCategory.id)}
+                            >
+                                {childCategory.name}
+                            </span>
+
+                            ))}
+
+                        </div>
+
+                    )}
+
+                    <hr className="my-2 opacity-25" />
+
+                    </div>
+
+                ))}
+
+            </div>
+
             </div>
 
             {/* 2. Color Filter Card */}

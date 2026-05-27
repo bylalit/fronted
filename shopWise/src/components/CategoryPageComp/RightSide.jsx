@@ -232,12 +232,6 @@ const RightSide = ({search, category, setCategory}) => {
                                     </span>
                                 )
                             }
-                            {/* <span className="badge border rounded-pill px-3 py-2 text-success font-normal d-flex align-items-center gap-2 fw-semibold" style={{ backgroundColor: '#E2F2EE', borderColor: '#C6E7E1', color: '#0AA586' }}>
-                            Electronics <i className="bi bi-x cursor-pointer fs-6"></i>
-                            </span>
-                            <span className="badge border rounded-pill px-3 py-2 text-success font-normal d-flex align-items-center gap-2 fw-semibold" style={{ backgroundColor: '#E2F2EE', borderColor: '#C6E7E1', color: '#0AA586' }}>
-                            $50 to $100 <i className="bi bi-x cursor-pointer fs-6"></i>
-                            </span> */}
                         </div>
                         <span 
                             className="text-muted hover-danger small fw-bold" 

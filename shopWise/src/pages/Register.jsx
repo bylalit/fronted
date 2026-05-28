@@ -1,13 +1,48 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {  useForm  } from 'react-hook-form'
 
 const Register = () => {
 
     const { register, handleSubmit } = useForm();
+    const navigate = useNavigate();
 
-    const onSubmit = (data)=> {
+    const url = "http://127.0.0.1:8000/api/user/";
+
+    const onSubmit = async (data)=> {
         console.log(data);
-        
+        if(data.password !== data.comform_password){
+            alert("Password and Comfirm Password do not match!");
+            return;
+        }
+
+        const response = await fetch(url, {
+            method: 'POST',
+            headers:{
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                email: data.email,
+                first_name: data.first_name,
+                last_name: data.last_name,
+                password: data.password
+            })
+        });
+
+        if(response.ok){
+            const result = await response.json();
+            // console.log("register", result);
+            alert("Register Succfully!")
+            navigate('/login');
+        }else{
+            const errorData = await response.json();
+            // console.log("Server Error:", errorData);
+            
+            if(errorData.email){
+                alert("this emil is already register!")
+            }else{
+                alert("Register failed. Pleaase check your details.");
+            }
+        }
     }
 
   return (

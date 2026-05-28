@@ -1,4 +1,4 @@
-import  { useState } from 'react';
+import  { useContext, useState } from 'react';
 import Favorites from '../components/UserAcoountsComp/Favorites';   
 import Payments from '../components/UserAcoountsComp/Payments';     
 import Feedback from '../components/UserAcoountsComp/Feedback';     
@@ -6,9 +6,12 @@ import Locations from '../components/UserAcoountsComp/Locations';
 import Preferences from '../components/UserAcoountsComp/Preferences';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import Orders from '../components/UserAcoountsComp/Orders';
+import { AuthContext } from '../context/AuthContext';
 
 const AccountDashboard = () => {
   const [activeTab, setActiveTab] = useState('Orders'); 
+
+  const { userProfile } = useContext(AuthContext);
 
   const menuItems = [
     { name: 'Orders', icon: 'bi-bag-check' },
@@ -37,7 +40,7 @@ const AccountDashboard = () => {
             <div className="card p-4 border rounded-3 bg-white shadow-sm text-center">
               <div className="position-relative d-inline-block mx-auto mb-3">
                 <img 
-                  src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80" 
+                  src={userProfile?.profile_image}
                   alt="Profile Avatar" 
                   className="rounded-circle border border-3"
                   style={{ width: '90px', height: '90px', objectFit: 'cover', borderColor: '#E2E8F0' }}
@@ -47,7 +50,7 @@ const AccountDashboard = () => {
                 </span>
               </div>
               
-              <h5 className="fw-bold text-dark mb-4 " style={{ fontSize: '18px' }}>Elena Mitchell</h5>
+              <h5 className="fw-bold text-dark mb-4 " style={{ fontSize: '18px' }}>{userProfile?.first_name} {userProfile?.last_name}</h5>
 
               <div className="row g-0 border rounded-3 py-2 bg-light mb-4">
                 <div className="col-4 border-end">

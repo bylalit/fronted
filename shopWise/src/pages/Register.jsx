@@ -9,23 +9,26 @@ const Register = () => {
     const url = "http://127.0.0.1:8000/api/user/";
 
     const onSubmit = async (data)=> {
-        console.log(data);
+        // console.log(data);
         if(data.password !== data.comform_password){
             alert("Password and Comfirm Password do not match!");
             return;
         }
 
+        const formData = new FormData();
+        formData.append('email', data.email);
+        formData.append('first_name', data.first_name);
+        formData.append('last_name', data.last_name);
+        formData.append('password', data.password);
+        formData.append('phone', data.phone);
+        
+        if(data.profile_image && data.profile_image[0]){
+            formData.append('profile_image', data.profile_image[0]);
+        }
+
         const response = await fetch(url, {
             method: 'POST',
-            headers:{
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                email: data.email,
-                first_name: data.first_name,
-                last_name: data.last_name,
-                password: data.password
-            })
+            body: formData
         });
 
         if(response.ok){
@@ -38,7 +41,10 @@ const Register = () => {
             // console.log("Server Error:", errorData);
             
             if(errorData.email){
-                alert("this emil is already register!")
+                alert("This email is already register!")
+            }
+            else if(errorData.phone){
+                alert("This number is already register!")
             }else{
                 alert("Register failed. Pleaase check your details.");
             }
@@ -117,7 +123,7 @@ const Register = () => {
                 {/* Intake Form Fields */}
                 <form onSubmit={handleSubmit(onSubmit)}>
 
-                  <div className="row g-3 mb-2">
+                <div className="row g-3 mb-2">
                     <div className="col-12 col-sm-6">
                         <label className="form-label text-dark fw-bold small mb-1.5" style={{ fontSize: '14px' }}>First Name</label>
                         <input 
@@ -138,9 +144,9 @@ const Register = () => {
                             {...register("last_name")}
                         />
                     </div>
-                  </div>
+                </div>
 
-                  <div className="mb-3">
+                <div className="mb-3">
                         <label className="form-label text-dark fw-bold small mb-1.5" style={{ fontSize: '14px' }}>Email Address</label>
                         <input 
                             type="email" 
@@ -149,22 +155,49 @@ const Register = () => {
                             style={{ borderRadius: '6px', fontSize: '14px' }} 
                             {...register("email")}
                         />
-                  </div>
+                </div>
 
-                  <div className="row g-3 mb-2">
+                {/* 🆕 NEW SECTION: Phone Number and Profile Image */}
+                <div className="row g-3 mb-3">
+                    {/* Phone Number Input */}
                     <div className="col-12 col-sm-6">
-                      <label className="form-label text-dark fw-bold small mb-1.5" style={{ fontSize: '14px' }}>Password</label>
-                      <input 
+                        <label className="form-label text-dark fw-bold small mb-1.5" style={{ fontSize: '14px' }}>Phone Number</label>
+                        <input 
+                            type="tel" 
+                            className="form-control shadow-none py-2.5 px-3" 
+                            placeholder="e.g., +919876543210" 
+                            style={{ borderRadius: '6px', fontSize: '14px' }} 
+                            {...register("phone")}
+                        />
+                    </div>
+                    
+                    {/* Profile Image Input */}
+                    <div className="col-12 col-sm-6">
+                        <label className="form-label text-dark fw-bold small mb-1.5" style={{ fontSize: '14px' }}>Profile Picture</label>
+                        <input 
+                            type="file" 
+                            accept="image/*" // Sirf images allow karne ke liye
+                            className="form-control shadow-none py-2 px-3" 
+                            style={{ borderRadius: '6px', fontSize: '14px' }} 
+                            {...register("profile_image")}
+                        />
+                    </div>
+                </div>
+
+                <div className="row g-3 mb-2">
+                    <div className="col-12 col-sm-6">
+                    <label className="form-label text-dark fw-bold small mb-1.5" style={{ fontSize: '14px' }}>Password</label>
+                    <input 
                         type="password" 
                         className="form-control shadow-none py-2.5 px-3" 
                         placeholder="Min. 8 characters" 
                         style={{ borderRadius: '6px', fontSize: '14px' }} 
                         {...register("password")}
-                       />
+                    />
                     </div>
                     <div className="col-12 col-sm-6">
-                      <label className="form-label text-dark fw-bold small mb-1.5" style={{ fontSize: '14px' }}>Confirm Password</label>
-                      <input 
+                    <label className="form-label text-dark fw-bold small mb-1.5" style={{ fontSize: '14px' }}>Confirm Password</label>
+                    <input 
                         type="password" 
                         className="form-control shadow-none py-2.5 px-3" 
                         placeholder="Re-enter password" 
@@ -172,35 +205,35 @@ const Register = () => {
                         {...register("comform_password")}
                         />
                     </div>
-                  </div>
-                  <small className="text-muted d-block mb-3" style={{ fontSize: '12px', marginTop: '-4px' }}>Must be at least 8 characters</small>
+                </div>
+                <small className="text-muted d-block mb-3" style={{ fontSize: '12px', marginTop: '-4px' }}>Must be at least 8 characters</small>
 
 
-                  {/* Operational Legal Checkboxes */}
-                  <div className="d-flex flex-column gap-2 mb-4 ps-0.5">
+                {/* Operational Legal Checkboxes */}
+                <div className="d-flex flex-column gap-2 mb-4 ps-0.5">
                     <label className="d-flex align-items-center gap-2 small cursor-pointer text-muted fw-medium">
-                      <input type="checkbox" className="form-check-input shadow-none border" style={{ width: '16px', height: '16px' }} required />
-                      <span>I agree to the <a href="#terms" className="text-success text-decoration-none fw-bold">Terms of Service</a> and <a href="#privacy" className="text-success text-decoration-none fw-bold">Privacy Policy</a></span>
+                    <input type="checkbox" className="form-check-input shadow-none border" style={{ width: '16px', height: '16px' }} required />
+                    <span>I agree to the <a href="#terms" className="text-success text-decoration-none fw-bold">Terms of Service</a> and <a href="#privacy" className="text-success text-decoration-none fw-bold">Privacy Policy</a></span>
                     </label>
                     <label className="d-flex align-items-center gap-2 small cursor-pointer text-muted fw-medium">
-                      <input type="checkbox" className="form-check-input shadow-none border" style={{ width: '16px', height: '16px' }} />
-                      Notify me about exclusive offers, new collections, and upcoming events
+                    <input type="checkbox" className="form-check-input shadow-none border" style={{ width: '16px', height: '16px' }} />
+                    Notify me about exclusive offers, new collections, and upcoming events
                     </label>
-                  </div>
+                </div>
 
-                  {/* Submission CTA Route Trigger */}
-                  <button 
+                {/* Submission CTA Route Trigger */}
+                <button 
                     type="submit" 
                     className="btn w-100 text-white fw-bold py-2.5 border-0 shadow-sm mb-4" 
                     style={{ backgroundColor: '#0AA586', borderRadius: '6px', fontSize: '15px' }}
 
-                  >
+                >
                     Create Account
-                  </button>
+                </button>
 
-                  <div className="text-center small text-muted fw-medium">
+                <div className="text-center small text-muted fw-medium">
                     Already have an account? <Link to="/login" className="text-success text-decoration-none fw-bold" style={{ color: '#0AA586' }}>Sign in</Link>
-                  </div>
+                </div>
                 </form>
 
               </div>

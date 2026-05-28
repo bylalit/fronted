@@ -1,4 +1,6 @@
-import  { useState } from 'react';
+import  { useContext, useState } from 'react';
+import { AuthContext } from '../../context/AuthContext';
+import {  useForm  } from 'react-hook-form';
 
 const Preferences = () => {
   // Notification Toggle States
@@ -7,6 +9,12 @@ const Preferences = () => {
     deals: false,
     digest: true
   });
+  
+  const { userProfile } = useContext(AuthContext);
+
+  const {register, handleSubmit} = useForm();
+
+//   const 
 
   return (
     <div>
@@ -18,23 +26,23 @@ const Preferences = () => {
           <i className="bi bi-person-vcard text-success"></i> Personal Details
         </h5>
         
-        <form onSubmit={(e) => e.preventDefault()}>
+        <form onClick={handleSubmit(onSubmit)}>
           <div className="row g-3 mb-3">
             <div className="col-12 col-sm-6">
               <label className="form-label small fw-bold text-secondary mb-1.5">First Name</label>
-              <input type="text" className="form-control bg-light bg-opacity-25 shadow-none border py-2 px-3" defaultValue="Elena" style={{ borderRadius: '6px', fontSize: '14px' }} />
+              <input type="text" className="form-control bg-light bg-opacity-25 shadow-none border py-2 px-3" defaultValue={userProfile?.first_name} style={{ borderRadius: '6px', fontSize: '14px' }} />
             </div>
             <div className="col-12 col-sm-6">
               <label className="form-label small fw-bold text-secondary mb-1.5">Last Name</label>
-              <input type="text" className="form-control bg-light bg-opacity-25 shadow-none border py-2 px-3" defaultValue="Mitchell" style={{ borderRadius: '6px', fontSize: '14px' }} />
+              <input type="text" className="form-control bg-light bg-opacity-25 shadow-none border py-2 px-3" defaultValue={userProfile?.last_name} style={{ borderRadius: '6px', fontSize: '14px' }} />
             </div>
             <div className="col-12 col-sm-6">
               <label className="form-label small fw-bold text-secondary mb-1.5">Email Address</label>
-              <input type="email" className="form-control bg-light bg-opacity-25 shadow-none border py-2 px-3" defaultValue="elena@example.com" style={{ borderRadius: '6px', fontSize: '14px' }} />
+              <input type="email" className="form-control bg-light bg-opacity-25 shadow-none border py-2 px-3" defaultValue={userProfile?.email} style={{ borderRadius: '6px', fontSize: '14px' }} />
             </div>
             <div className="col-12 col-sm-6">
               <label className="form-label small fw-bold text-secondary mb-1.5">Phone Number</label>
-              <input type="text" className="form-control bg-light bg-opacity-25 shadow-none border py-2 px-3" defaultValue="+1 (555) 472-8391" style={{ borderRadius: '6px', fontSize: '14px' }} />
+              <input type="text" className="form-control bg-light bg-opacity-25 shadow-none border py-2 px-3" defaultValue={userProfile?.phone} style={{ borderRadius: '6px', fontSize: '14px' }} />
             </div>
           </div>
           <div className="text-end">

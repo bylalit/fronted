@@ -1,6 +1,7 @@
-import  { useState, useEffect, useRef } from "react";
+import  { useState, useEffect, useRef, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import 'bootstrap-icons/font/bootstrap-icons.css';
+import { AuthContext } from "../context/AuthContext";
 
 const Navbar = ({ setSearch }) => {
   // Dropdowns visibility tracking conditional states
@@ -10,6 +11,9 @@ const Navbar = ({ setSearch }) => {
   const [isLoggedIn, setIsLogggedIn] = useState(false); 
 
   const navigate = useNavigate();
+
+  const { userProfile } = useContext(AuthContext);
+  
 
   // References to handle click-away dismissals
   const userRef = useRef(null);
@@ -145,8 +149,17 @@ const Navbar = ({ setSearch }) => {
                   style={{ width: '38px', height: '38px', cursor: 'pointer' }}
                 >
                     {
-                        isLoggedIn ? <i className="bi bi-person-circle text-success fs-5"></i> : 
-                                    <i className="bi bi-person fs-3 "></i>
+                        isLoggedIn ? (
+                            <img
+                            src = {userProfile?.profile_image}
+                            alt="profile"
+                            className="rounded-circle"
+                            width="35"
+                            height="35"
+                            />
+                        ) : (
+                            <i className="bi bi-person fs-3"></i>
+                        )
                     }
                   
                 </div>
@@ -161,7 +174,7 @@ const Navbar = ({ setSearch }) => {
                     {/*  CONDITION 1: AGAR USER LOGGED IN HAI */}
                     {isLoggedIn ? (
                         <>
-                        <h6 className="fw-bold mb-1 text-dark" style={{ fontSize: '15px' }}>Hello User!</h6>
+                        <h6 className="fw-bold mb-1 text-dark" style={{ fontSize: '15px' }}>{userProfile?.first_name}</h6>
                         <p className="text-muted mb-3" style={{ fontSize: '12px' }}>Manage your account and orders</p>
                         
                         <div className="d-flex mb-3">

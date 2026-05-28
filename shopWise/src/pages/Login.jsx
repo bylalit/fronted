@@ -1,10 +1,14 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from 'react-hook-form'
+import { AuthContext } from "../context/AuthContext";
+import { useContext } from "react";
 
 const Login = () => {
 
-    const { register, handleSubmit, reset } = useForm();
+    const { register, handleSubmit } = useForm();
     const navigate = useNavigate();
+
+    const { getUser } = useContext(AuthContext);
 
     const url = "http://127.0.0.1:8000/api/login/";
 
@@ -36,6 +40,8 @@ const Login = () => {
 
         localStorage.setItem('accessToken', result.access);
         localStorage.setItem('refreshToken', result.refresh);
+
+        await getUser();
 
         alert('Login Successful!');
         navigate('/');

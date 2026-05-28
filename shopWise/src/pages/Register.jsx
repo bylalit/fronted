@@ -1,7 +1,15 @@
 import { Link } from "react-router-dom";
-
+import {  useForm  } from 'react-hook-form'
 
 const Register = () => {
+
+    const { register, handleSubmit } = useForm();
+
+    const onSubmit = (data)=> {
+        console.log(data);
+        
+    }
+
   return (
     <>
       <section className="w-100 pb-3" style={{ minHeight: '100vh', fontFamily: "'Poppins', sans-serif" }}>
@@ -72,38 +80,66 @@ const Register = () => {
                 </div>
 
                 {/* Intake Form Fields */}
-                <form onSubmit={(e) => e.preventDefault()}>
-                  <div className="mb-3">
-                    <label className="form-label text-dark fw-bold small mb-1.5" style={{ fontSize: '14px' }}>Full Name</label>
-                    <input type="text" className="form-control shadow-none py-2.5 px-3" placeholder="Enter your full name" style={{ borderRadius: '6px', fontSize: '14px' }} />
+                <form onSubmit={handleSubmit(onSubmit)}>
+
+                  <div className="row g-3 mb-2">
+                    <div className="col-12 col-sm-6">
+                        <label className="form-label text-dark fw-bold small mb-1.5" style={{ fontSize: '14px' }}>First Name</label>
+                        <input 
+                            type="text" 
+                            className="form-control shadow-none py-2.5 px-3" 
+                            placeholder="First Name" 
+                            style={{ borderRadius: '6px', fontSize: '14px' }} 
+                            {...register("first_name")}
+                        />
+                    </div>
+                    <div className="col-12 col-sm-6">
+                        <label className="form-label text-dark fw-bold small mb-1.5" style={{ fontSize: '14px' }}>Last Name</label>
+                        <input 
+                            type="text" 
+                            className="form-control shadow-none py-2.5 px-3" 
+                            placeholder="Last Name" 
+                            style={{ borderRadius: '6px', fontSize: '14px' }}
+                            {...register("last_name")}
+                        />
+                    </div>
                   </div>
 
                   <div className="mb-3">
-                    <label className="form-label text-dark fw-bold small mb-1.5" style={{ fontSize: '14px' }}>Email Address</label>
-                    <input type="email" className="form-control shadow-none py-2.5 px-3" placeholder="you@example.com" style={{ borderRadius: '6px', fontSize: '14px' }} />
+                        <label className="form-label text-dark fw-bold small mb-1.5" style={{ fontSize: '14px' }}>Email Address</label>
+                        <input 
+                            type="email" 
+                            className="form-control shadow-none py-2.5 px-3" 
+                            placeholder="you@example.com" 
+                            style={{ borderRadius: '6px', fontSize: '14px' }} 
+                            {...register("email")}
+                        />
                   </div>
 
                   <div className="row g-3 mb-2">
                     <div className="col-12 col-sm-6">
                       <label className="form-label text-dark fw-bold small mb-1.5" style={{ fontSize: '14px' }}>Password</label>
-                      <input type="password" className="form-control shadow-none py-2.5 px-3" placeholder="Min. 8 characters" style={{ borderRadius: '6px', fontSize: '14px' }} />
+                      <input 
+                        type="password" 
+                        className="form-control shadow-none py-2.5 px-3" 
+                        placeholder="Min. 8 characters" 
+                        style={{ borderRadius: '6px', fontSize: '14px' }} 
+                        {...register("password")}
+                       />
                     </div>
                     <div className="col-12 col-sm-6">
                       <label className="form-label text-dark fw-bold small mb-1.5" style={{ fontSize: '14px' }}>Confirm Password</label>
-                      <input type="password" className="form-control shadow-none py-2.5 px-3" placeholder="Re-enter password" style={{ borderRadius: '6px', fontSize: '14px' }} />
+                      <input 
+                        type="password" 
+                        className="form-control shadow-none py-2.5 px-3" 
+                        placeholder="Re-enter password" 
+                        style={{ borderRadius: '6px', fontSize: '14px' }} 
+                        {...register("comform_password")}
+                        />
                     </div>
                   </div>
                   <small className="text-muted d-block mb-3" style={{ fontSize: '12px', marginTop: '-4px' }}>Must be at least 8 characters</small>
 
-                  <div className="mb-4">
-                    <label className="form-label text-dark fw-bold small mb-1.5" style={{ fontSize: '14px' }}>Country</label>
-                    <select className="form-select shadow-none py-2.5 px-3 text-muted" style={{ borderRadius: '6px', fontSize: '14px' }}>
-                      <option>Select your country</option>
-                      <option>United States</option>
-                      <option>United Kingdom</option>
-                      <option>Canada</option>
-                    </select>
-                  </div>
 
                   {/* Operational Legal Checkboxes */}
                   <div className="d-flex flex-column gap-2 mb-4 ps-0.5">
@@ -118,7 +154,12 @@ const Register = () => {
                   </div>
 
                   {/* Submission CTA Route Trigger */}
-                  <button type="submit" className="btn w-100 text-white fw-bold py-2.5 border-0 shadow-sm mb-4" style={{ backgroundColor: '#0AA586', borderRadius: '6px', fontSize: '15px' }}>
+                  <button 
+                    type="submit" 
+                    className="btn w-100 text-white fw-bold py-2.5 border-0 shadow-sm mb-4" 
+                    style={{ backgroundColor: '#0AA586', borderRadius: '6px', fontSize: '15px' }}
+
+                  >
                     Create Account
                   </button>
 

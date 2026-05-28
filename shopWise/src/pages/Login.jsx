@@ -1,6 +1,47 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useForm } from 'react-hook-form'
 
 const Login = () => {
+
+    const { register, handleSubmit, reset } = useForm();
+    const navigate = useNavigate();
+
+    const url = "http://127.0.0.1:8000/api/login/";
+
+    const onSubmit = async(data) => {
+        // console.log(data);
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                email: data.email,
+                password: data.password
+            })
+        });
+
+        if (!response.ok) {
+            // Agar password galat hoga toh Django 401 error dega
+            if (response.status === 401) {
+                alert('Invalid Email or Password');
+            } else {
+                alert('Something went wrong!');
+            }
+            return;
+        }
+
+        const result = await response.json();
+        // console.log(result);
+
+        localStorage.setItem('accessToken', result.access);
+        localStorage.setItem('refreshToken', result.refresh);
+
+        alert('Login Successful!');
+        navigate('/');
+    }
+
+
   return (
     <>
       <section className="w-100 pb-3" style={{ minHeight: '100vh', fontFamily: "'Poppins', sans-serif" }}>
@@ -63,10 +104,17 @@ const Login = () => {
                 </div>
 
                 {/* Login Credentials Inputs */}
-                <form onSubmit={(e) => e.preventDefault()}>
+                <form onSubmit={handleSubmit(onSubmit)}>
                   <div className="mb-3">
                     <label className="form-label text-dark fw-bold small mb-1.5" style={{ fontSize: '14px' }}>Email Address</label>
-                    <input type="email" className="form-control shadow-none py-2.5 px-3" placeholder="you@example.com" style={{ borderRadius: '6px', fontSize: '14px' }} required />
+                    <input 
+                        type="email" 
+                        className="form-control shadow-none py-2.5 px-3" 
+                        placeholder="you@example.com" 
+                        style={{ borderRadius: '6px', fontSize: '14px' }} 
+                        {...register("email", {required: "Email is required!"})}
+                        required 
+                    />
                   </div>
 
                   <div className="mb-4">
@@ -74,7 +122,14 @@ const Login = () => {
                       <label className="form-label text-dark fw-bold small mb-0" style={{ fontSize: '14px' }}>Password</label>
                       <a href="#forgot" className="text-success text-decoration-none small fw-bold" style={{ color: '#0AA586', fontSize: '13px' }}>Forgot password?</a>
                     </div>
-                    <input type="password" className="form-control shadow-none py-2.5 px-3" placeholder="Enter your password" style={{ borderRadius: '6px', fontSize: '14px' }} required />
+                    <input 
+                        type="password" 
+                        className="form-control shadow-none py-2.5 px-3" 
+                        placeholder="Enter your password" 
+                        style={{ borderRadius: '6px', fontSize: '14px' }} 
+                        {...register("password", {required: "Password is required!"})}
+                        required 
+                    />
                   </div>
 
                   {/* Remember Me Option */}
@@ -86,7 +141,11 @@ const Login = () => {
                   </div>
 
                   {/* Submission CTA Trigger */}
-                  <button type="submit" className="btn w-100 text-white fw-bold py-2.5 border-0 shadow-sm mb-4" style={{ backgroundColor: '#0AA586', borderRadius: '6px', fontSize: '15px' }}>
+                  <button 
+                    type="submit" 
+                    className="btn w-100 text-white fw-bold py-2.5 border-0 shadow-sm mb-4" 
+                    style={{ backgroundColor: '#0AA586', borderRadius: '6px', fontSize: '15px' }}
+                >
                     Sign In
                   </button>
 

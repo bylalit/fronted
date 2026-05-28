@@ -7,6 +7,8 @@ const Navbar = ({ setSearch }) => {
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [showCartDropdown, setShowCartDropdown] = useState(false);
 
+  const [isLoggedIn, setIsLogggedIn] = useState(false); 
+
   const navigate = useNavigate();
 
   // References to handle click-away dismissals
@@ -48,8 +50,22 @@ const Navbar = ({ setSearch }) => {
     }
   ];
 
+  const handleLogout = ()=> {
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+
+    setIsLogggedIn(false);
+    setShowUserDropdown(false);
+    alert("Logged out successfully!");
+    navigate('/');
+  }
+
   // Outside pointer events listener cleanup observer loop
   useEffect(() => {
+
+    const token = localStorage.getItem('accessToken');
+    setIsLogggedIn(!!token);
+
     const handleOutsideClick = (event) => {
       if (userRef.current && !userRef.current.contains(event.target)) {
         setShowUserDropdown(false);
@@ -60,7 +76,7 @@ const Navbar = ({ setSearch }) => {
     };
     document.addEventListener("mousedown", handleOutsideClick);
     return () => document.removeEventListener("mousedown", handleOutsideClick);
-  }, []);
+  }, [showUserDropdown]);
 
   return (
     <header className="w-100 font-sans shadow-sm">
@@ -137,13 +153,43 @@ const Navbar = ({ setSearch }) => {
                     className="position-absolute end-0 bg-white border rounded-3 p-4 shadow-lg text-start z-3" 
                     style={{ width: '280px', marginTop: '12px', borderColor: '#e2e8f0' }}
                   >
-                    <h6 className="fw-bold mb-1 text-dark" style={{ fontSize: '15px' }}>Welcome Back</h6>
+                    {/* <h6 className="fw-bold mb-1 text-dark" style={{ fontSize: '15px' }}>Welcome Back</h6>
                     <p className="text-muted mb-3" style={{ fontSize: '12px' }}>Log in for a personalized experience</p>
                     
                     <div className="d-flex gap-2 mb-3">
                       <Link to="/login" className="btn btn-success btn-sm flex-grow-1 fw-bold text-white border-0" style={{ backgroundColor: '#0aa586', padding: '7px 0', fontSize: '13px' }} onClick={() => setShowUserDropdown(false)}>Log In</Link>
                       <Link to="/register" className="btn btn-light btn-sm flex-grow-1 fw-bold border text-secondary bg-white" style={{ padding: '7px 0', fontSize: '13px' }} onClick={() => setShowUserDropdown(false)}>Register</Link>
-                    </div>
+                    </div> */}
+
+                    {/* 🔐 CONDITION 1: AGAR USER LOGGED IN HAI */}
+                    {isLoggedIn ? (
+                        <>
+                        <h6 className="fw-bold mb-1 text-dark" style={{ fontSize: '15px' }}>Hello User!</h6>
+                        <p className="text-muted mb-3" style={{ fontSize: '12px' }}>Manage your account and orders</p>
+                        
+                        <div className="d-flex mb-3">
+                            {/* Red color ka logout button */}
+                            <button 
+                            onClick={handleLogout} 
+                            className="btn btn-danger btn-sm flex-grow-1 fw-bold text-white border-0" 
+                            style={{ backgroundColor: '#dc3545', padding: '7px 0', fontSize: '13px' }}
+                            >
+                            Sign Out
+                            </button>
+                        </div>
+                        </>
+                    ) : (
+                        /* 🔓 CONDITION 2: AGAR USER LOGGED OUT HAI (Aapka Pehle Wala Code) */
+                        <>
+                        <h6 className="fw-bold mb-1 text-dark" style={{ fontSize: '15px' }}>Welcome Back</h6>
+                        <p className="text-muted mb-3" style={{ fontSize: '12px' }}>Log in for a personalized experience</p>
+                        
+                        <div className="d-flex gap-2 mb-3">
+                            <Link to="/login" className="btn btn-success btn-sm flex-grow-1 fw-bold text-white border-0" style={{ backgroundColor: '#0aa586', padding: '7px 0', fontSize: '13px' }} onClick={() => setShowUserDropdown(false)}>Log In</Link>
+                            <Link to="/register" className="btn btn-light btn-sm flex-grow-1 fw-bold border text-secondary bg-white" style={{ padding: '7px 0', fontSize: '13px' }} onClick={() => setShowUserDropdown(false)}>Register</Link>
+                        </div>
+                        </>
+                    )}
 
                     <hr className="text-muted opacity-25 my-3" />
 

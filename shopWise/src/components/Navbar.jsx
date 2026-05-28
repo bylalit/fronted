@@ -144,7 +144,11 @@ const Navbar = ({ setSearch }) => {
                   className="cursor-pointer text-dark p-1 rounded-circle border d-flex align-items-center justify-content-center bg-light-hover"
                   style={{ width: '38px', height: '38px', cursor: 'pointer' }}
                 >
-                  <i className="bi bi-person fs-5"></i>
+                    {
+                        isLoggedIn ? <i className="bi bi-person-circle text-success fs-5"></i> : 
+                                    <i className="bi bi-person fs-3 "></i>
+                    }
+                  
                 </div>
 
                 {/* VISUAL COMPONENT 1: ANCHORED USER AUTH PROFILE MENUS */}
@@ -153,15 +157,8 @@ const Navbar = ({ setSearch }) => {
                     className="position-absolute end-0 bg-white border rounded-3 p-4 shadow-lg text-start z-3" 
                     style={{ width: '280px', marginTop: '12px', borderColor: '#e2e8f0' }}
                   >
-                    {/* <h6 className="fw-bold mb-1 text-dark" style={{ fontSize: '15px' }}>Welcome Back</h6>
-                    <p className="text-muted mb-3" style={{ fontSize: '12px' }}>Log in for a personalized experience</p>
-                    
-                    <div className="d-flex gap-2 mb-3">
-                      <Link to="/login" className="btn btn-success btn-sm flex-grow-1 fw-bold text-white border-0" style={{ backgroundColor: '#0aa586', padding: '7px 0', fontSize: '13px' }} onClick={() => setShowUserDropdown(false)}>Log In</Link>
-                      <Link to="/register" className="btn btn-light btn-sm flex-grow-1 fw-bold border text-secondary bg-white" style={{ padding: '7px 0', fontSize: '13px' }} onClick={() => setShowUserDropdown(false)}>Register</Link>
-                    </div> */}
 
-                    {/* 🔐 CONDITION 1: AGAR USER LOGGED IN HAI */}
+                    {/*  CONDITION 1: AGAR USER LOGGED IN HAI */}
                     {isLoggedIn ? (
                         <>
                         <h6 className="fw-bold mb-1 text-dark" style={{ fontSize: '15px' }}>Hello User!</h6>
@@ -179,7 +176,7 @@ const Navbar = ({ setSearch }) => {
                         </div>
                         </>
                     ) : (
-                        /* 🔓 CONDITION 2: AGAR USER LOGGED OUT HAI (Aapka Pehle Wala Code) */
+                        /*  CONDITION 2: AGAR USER LOGGED OUT HAI (Aapka Pehle Wala Code) */
                         <>
                         <h6 className="fw-bold mb-1 text-dark" style={{ fontSize: '15px' }}>Welcome Back</h6>
                         <p className="text-muted mb-3" style={{ fontSize: '12px' }}>Log in for a personalized experience</p>

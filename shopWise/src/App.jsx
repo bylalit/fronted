@@ -13,12 +13,28 @@ import Register from './pages/Register'
 import Login from './pages/Login'
 import UserAcoount from './pages/UserAcoount'
 import { useState } from 'react'
+import { Toaster } from 'react-hot-toast';
 
 function App() {
 
   const [search, setSearch] = useState("")
   return (
     <>
+        <Toaster 
+        position="top-right" 
+        toastOptions={{
+          duration: 3000, // 3.5 seconds baad automatic gayab ho jayega
+          style: {
+            background: '#ffffff',
+            color: '#333333',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+            borderRadius: '8px',
+            padding: '12px 24px',
+            fontSize: '14px',
+            fontWeight: '500'
+          },
+        }} 
+      />
         <Navbar setSearch={setSearch} />
         <Routes>
           <Route path='/' element={<Home />} />

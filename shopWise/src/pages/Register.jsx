@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import {  useForm  } from 'react-hook-form'
+import toast from "react-hot-toast";
 
 const Register = () => {
 
@@ -11,7 +12,7 @@ const Register = () => {
     const onSubmit = async (data)=> {
         // console.log(data);
         if(data.password !== data.comform_password){
-            alert("Password and Comfirm Password do not match!");
+            toast.error("Password and Comfirm Password do not match!");
             return;
         }
 
@@ -33,20 +34,19 @@ const Register = () => {
 
         if(response.ok){
             const result = await response.json();
-            // console.log("register", result);
-            alert("Register Succfully!")
+            toast.success("Register Succfully!")
             navigate('/login');
         }else{
             const errorData = await response.json();
             // console.log("Server Error:", errorData);
             
             if(errorData.email){
-                alert("This email is already register!")
+                toast.error("This email is already register!")
             }
             else if(errorData.phone){
-                alert("This number is already register!")
+                toast.error("This number is already register!")
             }else{
-                alert("Register failed. Pleaase check your details.");
+                toast.error("Register failed. Pleaase check your details.");
             }
         }
     }

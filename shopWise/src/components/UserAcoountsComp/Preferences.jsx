@@ -1,6 +1,7 @@
 import  { useContext, useState } from 'react';
 import { AuthContext } from '../../context/AuthContext';
 import {  useForm  } from 'react-hook-form';
+import toast from 'react-hot-toast';
 
 const Preferences = () => {
   // Notification Toggle States
@@ -10,11 +11,46 @@ const Preferences = () => {
     digest: true
   });
   
-  const { userProfile } = useContext(AuthContext);
+  const { userProfile, getUser } = useContext(AuthContext);
 
   const {register, handleSubmit} = useForm();
 
-//   const 
+  const onSubmit = async (data)=> {
+    console.log(data);
+    const token = localStorage.getItem("accessToken")
+    if(!token){
+        toast.error("Session expried. Please log in again.")
+        return;
+    }
+
+    const url = "http://127.0.0.1:8000/api/user/me/";
+
+    const response = await fetch(url, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+            first_name: data.first_name,
+            last_name: data.last_name,
+            email: data.email,
+            phone: data.phone
+        })
+    });
+
+    if(response.ok){
+        const result = await response.json();
+        toast.success("Profile updated successfully!");
+
+        await getUser();
+    }else {
+        const errorData = await response.json();
+        toast.error("Failed to update profile. Please check the fields.");
+    }
+
+
+  }
 
   return (
     <div>
@@ -26,27 +62,51 @@ const Preferences = () => {
           <i className="bi bi-person-vcard text-success"></i> Personal Details
         </h5>
         
-        <form onClick={handleSubmit(onSubmit)}>
+        <form onSubmit={handleSubmit(onSubmit)}>
           <div className="row g-3 mb-3">
             <div className="col-12 col-sm-6">
               <label className="form-label small fw-bold text-secondary mb-1.5">First Name</label>
-              <input type="text" className="form-control bg-light bg-opacity-25 shadow-none border py-2 px-3" defaultValue={userProfile?.first_name} style={{ borderRadius: '6px', fontSize: '14px' }} />
+              <input 
+                type="text" 
+                className="form-control bg-light bg-opacity-25 shadow-none border py-2 px-3" 
+                defaultValue={userProfile?.first_name} 
+                style={{ borderRadius: '6px', fontSize: '14px' }} 
+                {...register("first_name")}
+            />
             </div>
             <div className="col-12 col-sm-6">
               <label className="form-label small fw-bold text-secondary mb-1.5">Last Name</label>
-              <input type="text" className="form-control bg-light bg-opacity-25 shadow-none border py-2 px-3" defaultValue={userProfile?.last_name} style={{ borderRadius: '6px', fontSize: '14px' }} />
+              <input 
+                type="text" 
+                className="form-control bg-light bg-opacity-25 shadow-none border py-2 px-3" 
+                defaultValue={userProfile?.last_name} 
+                style={{ borderRadius: '6px', fontSize: '14px' }} 
+                {...register("last_name")}
+            />
             </div>
             <div className="col-12 col-sm-6">
               <label className="form-label small fw-bold text-secondary mb-1.5">Email Address</label>
-              <input type="email" className="form-control bg-light bg-opacity-25 shadow-none border py-2 px-3" defaultValue={userProfile?.email} style={{ borderRadius: '6px', fontSize: '14px' }} />
+              <input 
+                type="email" 
+                className="form-control bg-light bg-opacity-25 shadow-none border py-2 px-3" 
+                defaultValue={userProfile?.email} 
+                style={{ borderRadius: '6px', fontSize: '14px' }} 
+                {...register("email")}    
+            />
             </div>
             <div className="col-12 col-sm-6">
               <label className="form-label small fw-bold text-secondary mb-1.5">Phone Number</label>
-              <input type="text" className="form-control bg-light bg-opacity-25 shadow-none border py-2 px-3" defaultValue={userProfile?.phone} style={{ borderRadius: '6px', fontSize: '14px' }} />
+              <input 
+                type="text" 
+                className="form-control bg-light bg-opacity-25 shadow-none border py-2 px-3" 
+                defaultValue={userProfile?.phone} 
+                style={{ borderRadius: '6px', fontSize: '14px' }} 
+                {...register("phone")}
+            />
             </div>
           </div>
           <div className="text-end">
-            <button className="btn text-white fw-bold px-4 py-2 mt-2" style={{ backgroundColor: '#0AA586', borderRadius: '6px', fontSize: '14px' }}>
+            <button type="submit" className="btn text-white fw-bold px-4 py-2 mt-2" style={{ backgroundColor: '#0AA586', borderRadius: '6px', fontSize: '14px' }}>
               Save Changes
             </button>
           </div>

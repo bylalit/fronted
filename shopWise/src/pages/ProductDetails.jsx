@@ -1,12 +1,15 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { AuthContext } from "../context/AuthContext";
 
 const ProductDetails = () => {
   const { id } = useParams();
   const url = "http://127.0.0.1:8000/api/product/" + id + "/";
 
+  // 🎯 FIX 1: Context se wishlist state aur toggle function dono nikal liye
+  const { wishlistItems, toggleWishlist } = useContext(AuthContext);
+
   let [product, setProduct] = useState();
-  // Main image ko control karne ke liye state
   const [activeImage, setActiveImage] = useState("");
 
   const getProductDetails = async () => {
@@ -16,25 +19,27 @@ const ProductDetails = () => {
     console.log(response);
     setProduct(response);
 
-    // FIX 1: Jab data load ho jaye, toh primary image ko default active image set karein
     const primaryImg = response?.images?.find(
       (img) => img.is_primary,
     )?.image_url;
     if (primaryImg) {
       setActiveImage(primaryImg);
     } else if (response?.images?.length > 0) {
-      // Agar koi primary mark nahi hai, toh peehli image set kar dein
       setActiveImage(response.images[0].image_url);
     }
   };
 
   useEffect(() => {
     getProductDetails();
-  }, []);
+  }, [id]); // 🔄 URL ID change hone par fetch dubara chalega
 
   const [activeTab, setActiveTab] = useState("description");
   const [quantity, setQuantity] = useState(1);
   const [selectedColor, setSelectedColor] = useState("Obsidian");
+
+  // 🎯 FIX 2: Check karein ki kya yeh product pehle se wishlist array me hai
+  // (Kyunki Django backend product ka data return karta hai, toh id string ya int convert ho jayegi)
+  const isFavorite = wishlistItems?.some(item => item.product === product?.id);
 
   // Review Mock Data
   const testimonials = [
@@ -69,7 +74,7 @@ const ProductDetails = () => {
           fontFamily: "'Poppins', sans-serif",
         }}
       >
-        {/*  1. BREADCRUMB HEADER SECTION  */}
+        {/* 1. BREADCRUMB HEADER SECTION  */}
         <div
           className="py-4 border-bottom"
           style={{ backgroundColor: "#F8FAFC" }}
@@ -103,7 +108,7 @@ const ProductDetails = () => {
           </div>
         </div>
 
-        {/*  2. CORE BUYING CONTROLS FRAMEWORK */}
+        {/* 2. CORE BUYING CONTROLS FRAMEWORK */}
         <div className="container px-md-5 mt-5">
           <div className="row g-5">
             {/* LEFT ROW: Gallery Multi-Image Workspace Panel */}
@@ -119,7 +124,6 @@ const ProductDetails = () => {
                   -21%
                 </span>
 
-                {/* FIX 2: src mein dynamic condition lagayi takki data load hone tak skeleton/blank na dikhe */}
                 <img
                   src={
                     activeImage ||
@@ -317,13 +321,17 @@ const ProductDetails = () => {
                       <i className="bi bi-bag-plus"></i> Add to Cart
                     </button>
                   </div>
+                  
+                  {/* ❤️ 🆕 DYNAMIC WISHLIST BUTTON PANEL */}
                   <div className="col-12 col-sm-2 text-center text-sm-start">
                     <button
-                      className="btn border bg-white rounded-2 d-inline-flex align-items-center justify-content-center text-secondary shadow-sm"
+                      onClick={() => toggleWishlist(product?.id)} // 🎯 Action Triggered
+                      className="btn border bg-white rounded-2 d-inline-flex align-items-center justify-content-center shadow-sm"
                       style={{ width: "44px", height: "44px" }}
-                      title="Wishlist"
+                      title={isFavorite ? "Remove from Wishlist" : "Add to Wishlist"}
                     >
-                      <i className="bi bi-heart"></i>
+                      {/* 🎨 Conditionally Color Change Applied */}
+                      <i className={`bi bi-heart-fill ${isFavorite ? 'text-danger' : 'text-secondary'}`}></i>
                     </button>
                   </div>
                 </div>
@@ -363,7 +371,7 @@ const ProductDetails = () => {
           </div>
         </div>
 
-        {/*  3. DESCRIPTIONS & TECHNICAL SPECIFICATIONS TAB PANELS  */}
+        {/* 3. DESCRIPTIONS & TECHNICAL SPECIFICATIONS TAB PANELS  */}
         <div className="container px-md-5 mt-5 pt-4">
           <div className="card border rounded-3 bg-white shadow-sm overflow-hidden">
             <div
@@ -408,21 +416,21 @@ const ProductDetails = () => {
 
               {activeTab === "specifications" && (
                 <div>
-                  {
-                    product.specifications.length ? <h4 className="fw-bold mb-4" style={{ color: "#0F2C59" }}>
-                    Technical Specifications Infomation
-                  </h4>: <h5>No Information</h5>}
+                  {product?.specifications?.length ? (
+                    <h4 className="fw-bold mb-4" style={{ color: "#0F2C59" }}>
+                      Technical Specifications Information
+                    </h4>
+                  ) : (
+                    <h5>No Information</h5>
+                  )}
                   <table className="table table-striped table-bordered small">
                     <tbody>
-                        
-                        {
-                            product?.specifications?.map((item, index) => (
-                                <tr key={index}>
-                                    <td className="fw-bold w-25">{item.key_name}</td>
-                                    <td>{item.value_text}</td>
-                                </tr>
-                            ))
-                        }
+                      {product?.specifications?.map((item, index) => (
+                        <tr key={index}>
+                          <td className="fw-bold w-25">{item.key_name}</td>
+                          <td>{item.value_text}</td>
+                        </tr>
+                      ))}
                     </tbody>
                   </table>
                 </div>
@@ -430,8 +438,8 @@ const ProductDetails = () => {
             </div>
           </div>
         </div>
-        
-        {/* Rewiew */}
+
+        {/* Review */}
         <div className="py-5 mt-5">
           <div className="container px-md-5 py-2">
             <div className="row mb-4">
@@ -470,7 +478,6 @@ const ProductDetails = () => {
 
                       <div>
                         <h6 className="fw-bold mb-0 text-dark">{item.name}</h6>
-
                         <small className="text-muted">{item.role}</small>
                       </div>
                     </div>

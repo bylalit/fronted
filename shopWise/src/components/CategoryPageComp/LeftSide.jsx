@@ -11,7 +11,7 @@ const LeftSide = ({setCategory}) => {
 
     const url = "http://127.0.0.1:8000/api/category/";
     const [openCategory, setOpenCategory] = useState(null);
-    const [categories, setCategories] = useState();
+    const [categories, setCategories] = useState([]);
 
 
     const getCategory = async()=> {
@@ -34,45 +34,7 @@ const LeftSide = ({setCategory}) => {
     <>
         {/* ==================== LEFT SIDEBAR FILTER CONTROLS ==================== */}
         <div className="col-12 col-lg-4">
-            
-            {/* 1. Category Tree Card */}
-            {/* <div className="card border-0 p-4 rounded-3 mb-4 shadow-sm border" style={{ backgroundColor: '#F8FAFC' }}>
-            <h5 className="fw-bold mb-4 border-start border-4 border-success ps-2" style={{ color: '#0F2C59', fontSize: '18px' }}>Categories</h5>
-            
-            <div className="d-flex flex-column gap-3" style={{ fontSize: '15px' }}>
-                <div>
-                <div className="d-flex justify-content-between text-dark fw-bold cursor-pointer align-items-center mb-2">
-                    <span>Clothing</span>
-                    <i className="bi bi-chevron-up text-muted small"></i>
-                </div>
-                <div className="d-flex flex-column gap-2 ps-3 text-muted fw-medium">
-                    <span className="cursor-pointer text-success">Men's Wear</span>
-                    <span className="cursor-pointer text-dark">Women's Wear</span>
-                    <span className="cursor-pointer text-dark">Kids' Clothing</span>
-                    <span className="cursor-pointer text-dark">Accessories</span>
-                </div>
-                </div>
 
-                <hr className="my-1 opacity-25" />
-
-                <div>
-                <div className="d-flex justify-content-between text-muted fw-semibold cursor-pointer align-items-center mb-2">
-                    <span>Electronics</span>
-                    <i className="bi bi-chevron-down small"></i>
-                </div>
-                </div>
-
-                {["Home & Kitchen", "Beauty & Personal Care", "Sports & Outdoors", "Books", "Toys & Games"].map((text, i) => (
-                <React.Fragment key={i}>
-                    <hr className="my-1 opacity-25" />
-                    <div className="d-flex justify-content-between text-muted fw-semibold cursor-pointer align-items-center">
-                    <span>{text}</span>
-                    <i className="bi bi-chevron-down small"></i>
-                    </div>
-                </React.Fragment>
-                ))}
-            </div>
-            </div> */}
             {/* Category Card */}
             <div
             className="card border-0 p-4 rounded-3 mb-4 shadow-sm border"
@@ -127,22 +89,20 @@ const LeftSide = ({setCategory}) => {
                         <div className="d-flex flex-column gap-2 ps-3">
 
                         {categories
-                            ?.filter((child) =>
-                            child.parent?.includes(
-                                `/category/${parentCategory.id}/`
-                            )
-                            )
+                            ?.filter((child) => {
+                                // 🎯 FIX: Agar child.parent direct ID integer hai ya object ki id hai
+                                const parentId = child.parent && typeof child.parent === 'object' ? child.parent.id : child.parent;
+                                return parentId === parentCategory.id;
+                            })
                             .map((childCategory) => (
-
-                            <span
-                                key={childCategory.id}
-                                className="text-muted"
-                                style={{ cursor: "pointer" }}
-                                onClick={()=> fileterByCategory(childCategory.id)}
-                            >
-                                {childCategory.name}
+                                <span
+                                    key={childCategory.id}
+                                    className="text-muted"
+                                    style={{ cursor: "pointer" }}
+                                    onClick={()=> fileterByCategory(childCategory.id)}
+                                >
+                                {childCategory?.name}
                             </span>
-
                             ))}
 
                         </div>

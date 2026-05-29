@@ -2,6 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useForm } from 'react-hook-form'
 import { AuthContext } from "../context/AuthContext";
 import { useContext } from "react";
+import toast from "react-hot-toast";
 
 const Login = () => {
 
@@ -28,9 +29,9 @@ const Login = () => {
         if (!response.ok) {
             // Agar password galat hoga toh Django 401 error dega
             if (response.status === 401) {
-                alert('Invalid Email or Password');
+                toast.error('Invalid Email or Password');
             } else {
-                alert('Something went wrong!');
+                toast.error('Something went wrong!');
             }
             return;
         }
@@ -43,7 +44,7 @@ const Login = () => {
 
         await getUser();
 
-        alert('Login Successful!');
+        toast.success('Login Successful!');
         navigate('/');
     }
 
@@ -126,7 +127,7 @@ const Login = () => {
                   <div className="mb-4">
                     <div className="d-flex justify-content-between align-items-center mb-1.5">
                       <label className="form-label text-dark fw-bold small mb-0" style={{ fontSize: '14px' }}>Password</label>
-                      <a href="#forgot" className="text-success text-decoration-none small fw-bold" style={{ color: '#0AA586', fontSize: '13px' }}>Forgot password?</a>
+                      {/* <a href="#forgot" className="text-success text-decoration-none small fw-bold" style={{ color: '#0AA586', fontSize: '13px' }}>Forgot password?</a> */}
                     </div>
                     <input 
                         type="password" 

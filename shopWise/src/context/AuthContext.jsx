@@ -29,8 +29,10 @@ export const AuthProvider = ({ children }) => {
 
         if (response.ok) {
             const data = await response.json();
+            // console.log(data);
+            
             setUserProfile(data);
-            getWishlist(token); // 🎯 User milte hi uski wishlist load karo
+            getWishlist(token); 
         } else {
             logout();
         }

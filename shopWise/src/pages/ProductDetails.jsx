@@ -65,7 +65,7 @@ const ProductDetails = () => {
       toast.error("Review text message cannot be empty!");
       return;
     }
-    
+
     try {
       const response = await fetch("http://127.0.0.1:8000/api/reviews/", {
         method: "POST",
@@ -79,7 +79,7 @@ const ProductDetails = () => {
           review_text: reviewText,
         }),
       });
-
+      
       if (response.ok) {
         toast.success("Review posted successfully! ⭐");
         setReviewText(""); 

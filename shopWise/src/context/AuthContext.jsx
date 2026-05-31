@@ -6,46 +6,99 @@ export const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
     const [userProfile, setUserProfile] = useState(null);
     const [wishlistItems, setWishlistItems] = useState([]);
+    const [cartData, setCartData] = useState();
 
     const userUrl = "http://127.0.0.1:8000/api/user/me/";
     const wishlistUrl = "http://127.0.0.1:8000/api/wishlist/";
+    const refreshUrl = "http://127.0.0.1:8000/api/token/refresh/"; // 🆕 Django JWT refresh endpoint
+    const cartUrl = "http://127.0.0.1:8000/api/cart/";
 
-    const getUser = async ()=> {
-        const token = localStorage.getItem("accessToken");
+    // 🆕 BACKGROUND TOKEN REFRESH LOGIC
+    const refreshAccessToken = async () => {
+        const refreshToken = localStorage.getItem("refreshToken");
+        if (!refreshToken) return null;
 
-        if(!token) {
+        try {
+            const response = await fetch(refreshUrl, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ refresh: refreshToken })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                localStorage.setItem("accessToken", data.access); // Save new access token
+                return data.access;
+            }
+        } catch (error) {
+            console.error("Error refreshing token:", error);
+        }
+        return null;
+    };
+
+    // 👤 GET USER PROFILE WITH AUTO-REFRESH
+    const getUser = async () => {
+        let token = localStorage.getItem("accessToken");
+
+        if (!token) {
             setUserProfile(null);  
             setWishlistItems([]);  
             return;
         }
 
-        const response = await fetch(userUrl, {
+        let response = await fetch(userUrl, {
             method: 'GET',
-            headers:{
+            headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${token}`
             }
         });
 
+        // 🎯 FIX: Agar token expire ho gaya (401 Unauthorized), toh background refresh chalao
+        if (response.status === 401) {
+            const newToken = await refreshAccessToken();
+            if (newToken) {
+                // Naye token ke sath request ko fir se attempt karein
+                response = await fetch(userUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${newToken}`
+                    }
+                });
+            }
+        }
+
         if (response.ok) {
             const data = await response.json();
-            // console.log(data);
-            
             setUserProfile(data);
-            getWishlist(token); 
+            getWishlist(token);
+            getCart(); 
         } else {
-            logout();
+            logout(); // Agar refresh token bhi expire ho chuka hai toh clear session
         }
     };
 
+    // 📦 GET WISHLIST WITH AUTO-REFRESH
     const getWishlist = async (passedToken = null) => {
-        const token = passedToken || localStorage.getItem("accessToken");
+        let token = passedToken || localStorage.getItem("accessToken");
         if (!token) return;
 
         try {
-            const response = await fetch(wishlistUrl, {
+            let response = await fetch(wishlistUrl, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
+
+            // 🎯 FIX: Wishlist fetch ke time par bhi 401 handle kiya
+            if (response.status === 401) {
+                const newToken = await refreshAccessToken();
+                if (newToken) {
+                    response = await fetch(wishlistUrl, {
+                        headers: { 'Authorization': `Bearer ${newToken}` }
+                    });
+                }
+            }
+
             if (response.ok) {
                 const data = await response.json();
                 setWishlistItems(data);
@@ -55,14 +108,15 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    // ❤️ TOGGLE WISHLIST WITH AUTO-REFRESH
     const toggleWishlist = async (productId) => {
-        const token = localStorage.getItem("accessToken");
+        let token = localStorage.getItem("accessToken");
         if (!token) {
             toast.error("Please log in to add items to your wishlist!");
             return;
         }
 
-        const response = await fetch(wishlistUrl, {
+        let response = await fetch(wishlistUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -70,6 +124,21 @@ export const AuthProvider = ({ children }) => {
             },
             body: JSON.stringify({ product: productId })
         });
+
+        // 🎯 FIX: Toggle wishlist par bhi 401 protection
+        if (response.status === 401) {
+            const newToken = await refreshAccessToken();
+            if (newToken) {
+                response = await fetch(wishlistUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${newToken}`
+                    },
+                    body: JSON.stringify({ product: productId })
+                });
+            }
+        }
 
         if (response.ok) {
             const result = await response.json();
@@ -83,8 +152,39 @@ export const AuthProvider = ({ children }) => {
         } else {
             toast.error("Something went wrong!");
         }
-        
     };
+
+    const getCart = async ()=> {
+        let token = localStorage.getItem("accessToken");
+        if(!token){
+            setCartData(null);
+            return;
+        }
+        
+        let response = await fetch(`${cartUrl}me/`, {
+            headers:{
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if(response.status === 401){
+            const newToken = await refreshAccessToken();
+            if(newToken){
+                response = await fetch(`${cartUrl}me/`, {
+                    headers:{
+                        'Authorization': `Bearer ${newToken}`
+                    }
+                });
+            }
+        }
+
+        if(response.ok){
+            const data = await response.json();
+            setCartData(data);
+            // console.log(data);
+        }
+
+    }
 
     const logout = () => {
         localStorage.removeItem("accessToken");
@@ -97,11 +197,9 @@ export const AuthProvider = ({ children }) => {
         getUser();
     }, []);
 
-    return(
-        <AuthContext.Provider value={{userProfile, setUserProfile, getUser, wishlistItems, toggleWishlist, getWishlist, logout}}>
+    return (
+        <AuthContext.Provider value={{ userProfile, setUserProfile, getUser, wishlistItems, toggleWishlist, getWishlist, getCart, cartData, logout }}>
             {children}
         </AuthContext.Provider>
     );
-
 };
-

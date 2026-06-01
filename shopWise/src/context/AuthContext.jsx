@@ -186,11 +186,73 @@ export const AuthProvider = ({ children }) => {
 
     }
 
+    const addToCart = async (productId, qty=1)=> {
+        let token = localStorage.getItem("accessToken")
+        if(!token){
+            toast.error("Please log in to add items to your cart!");
+            return
+        }
+
+        let response = await fetch(`${cartUrl}add_item/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ product: productId, quantity: qty })
+        });
+
+        if (response.status === 401) {
+            const newToken = await refreshAccessToken();
+            if (newToken) {
+                response = await fetch(`${cartUrl}add_item/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${newToken}`
+                    },
+                    body: JSON.stringify({ product: productId, quantity: qty })
+                });
+            }
+        }
+
+        if (response.ok) {
+            toast.success("Added to Cart successfully! 🛒");
+            getCart();
+        }
+    }
+
+
+    const removeFromCart = async (productId) => {
+        let token = localStorage.getItem("accessToken");
+        if (!token) return;
+
+        try {
+            let response = await fetch(`${cartUrl}remove_item/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ product: productId })
+            });
+
+            if (response.ok) {
+                toast.success("Item removed from cart!");
+                getCart();
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+
     const logout = () => {
         localStorage.removeItem("accessToken");
         localStorage.removeItem("refreshToken");
         setUserProfile(null);
         setWishlistItems([]);
+        setCartData([]);
     };
 
     useEffect(() => {
@@ -198,7 +260,7 @@ export const AuthProvider = ({ children }) => {
     }, []);
 
     return (
-        <AuthContext.Provider value={{ userProfile, setUserProfile, getUser, wishlistItems, toggleWishlist, getWishlist, getCart, cartData, logout }}>
+        <AuthContext.Provider value={{ userProfile, setUserProfile, getUser, wishlistItems, toggleWishlist, getWishlist, getCart, cartData, addToCart, removeFromCart, logout }}>
             {children}
         </AuthContext.Provider>
     );

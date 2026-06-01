@@ -9,7 +9,7 @@ const ProductDetails = () => {
   const reviewsUrl = `http://127.0.0.1:8000/api/reviews/?product_id=${id}`;
 
   // 🎯 Context se userProfile bhi nikal liya taaki login status track kar sakein
-  const { wishlistItems, toggleWishlist, userProfile } = useContext(AuthContext);
+  const { wishlistItems, toggleWishlist, userProfile, addToCart } = useContext(AuthContext);
 
   let [product, setProduct] = useState();
   const [activeImage, setActiveImage] = useState("");
@@ -17,6 +17,7 @@ const ProductDetails = () => {
   const [reviews, setReviews] = useState([]);
   const [reviewText, setReviewText] = useState("");
   const [ratingStart, setRatingStart] = useState("5.0");
+  const [quantity, setQuantity] = useState(1);
 
   // 📦 1. Core Product Details Extraction
   const getProductDetails = async () => {
@@ -52,7 +53,7 @@ const ProductDetails = () => {
     }
   };
 
-  // 📝 3. Submit Review Form Handler
+  // 3. Submit Review Form Handler
   const handleReviewSubmit = async (e) => {
     e.preventDefault();
     const token = localStorage.getItem("accessToken");
@@ -94,13 +95,13 @@ const ProductDetails = () => {
     }
   };
 
+
   useEffect(() => {
     getProductDetails();
     getProductReviews(); 
   }, [id]);
 
   const [activeTab, setActiveTab] = useState("description");
-  const [quantity, setQuantity] = useState(1);
   const [selectedColor, setSelectedColor] = useState("Obsidian");
 
   const isFavorite = wishlistItems?.some(item => item.product === product?.id);
@@ -212,13 +213,17 @@ const ProductDetails = () => {
                     <span className="fw-extrabold text-dark h2 mb-0" style={{ color: "#0F2C59" }}>
                       ${product?.price}
                     </span>
-                    <span className="text-muted text-decoration-line-through text-md">
-                      ${product?.old_price}
-                    </span>
+                    {
+                      (product?.old_price) && <span className="text-muted text-decoration-line-through text-md">
+                                                ${product?.old_price}
+                                              </span>
+                    }
                   </div>
-                  <span className="badge border px-2.5 py-1.5 text-success fw-bold font-normal" style={{ backgroundColor: "#E2F2EE", borderColor: "#C6E7E1", fontSize: "12px" }}>
-                    Save $50.00
-                  </span>
+                  {
+                      (product?.old_price) && <span className="badge border px-2.5 py-1.5 text-success fw-bold font-normal" style={{ backgroundColor: "#E2F2EE", borderColor: "#C6E7E1", fontSize: "12px" }}>
+                      Save ${product?.old_price - product?.price}
+                    </span>
+                  }    
                 </div>
 
                 <p className="text-secondary small lh-base mb-4" style={{ fontSize: "14.5px" }}>
@@ -267,7 +272,11 @@ const ProductDetails = () => {
                     </div>
                   </div>
                   <div className="col-8 col-sm-7">
-                    <button className="btn w-100 text-white fw-bold border-0 d-flex align-items-center justify-content-center gap-2 shadow-sm" style={{ backgroundColor: "#0AA586", height: "44px", borderRadius: "6px" }}>
+                    <button 
+                      className="btn w-100 text-white fw-bold border-0 d-flex align-items-center justify-content-center gap-2 shadow-sm" 
+                      style={{ backgroundColor: "#0AA586", height: "44px", borderRadius: "6px" }}
+                      onClick={() => product && addToCart(product.id, quantity)}
+                      >
                       <i className="bi bi-bag-plus"></i> Add to Cart
                     </button>
                   </div>

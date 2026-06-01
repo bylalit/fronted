@@ -10,7 +10,7 @@ const RightSide = ({search, category, setCategory}) => {
     const [liveSearch, setLiveSearch] = useState("");
     const [price, setPrice] = useState("");
     const [sort, setSort] = useState("");
-    const { wishlistItems, toggleWishlist } = useContext(AuthContext);
+    const { wishlistItems, toggleWishlist, addToCart } = useContext(AuthContext);
 
     let url = "http://127.0.0.1:8000/api/product/";
     let param = [];
@@ -48,6 +48,8 @@ const RightSide = ({search, category, setCategory}) => {
     const productShowData = (id) => {
         navigate("/productDetails/"+id);
     }
+
+
 
     useEffect(() => {
         getProduct();
@@ -346,6 +348,7 @@ const RightSide = ({search, category, setCategory}) => {
                                         <button
                                             className="btn text-white fw-bold border-0 shadow-sm"
                                             style={{ backgroundColor: '#0AA586', borderRadius: '5px', fontSize: '12px', padding: '8px 12px', whiteSpace: 'nowrap' }}
+                                            onClick={() => addToCart(product.id)}
                                         >
                                             Add to Cart
                                         </button>

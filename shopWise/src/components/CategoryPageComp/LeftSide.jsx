@@ -1,33 +1,40 @@
 import { useEffect, useState } from 'react';
 
-const LeftSide = ({setCategory}) => {
+const LeftSide = ({setCategory, setBrand}) => {
     const colors = ["#000000", "#ffffff", "#EF4444", "#3B82F6", "#22C55E", "#EAB308", "#A855F7", "#F97316", "#EC4899", "#78350F"];
     
-    const brands = [
-        { name: "Nike", count: 24 }, { name: "Adidas", count: 18 }, { name: "Puma", count: 12 },
-        { name: "Reebok", count: 9 }, { name: "Under Armour", count: 7 }, { name: "New Balance", count: 6 },
-        { name: "Converse", count: 5 }, { name: "Vans", count: 4 }
-    ];
 
-    const url = "http://127.0.0.1:8000/api/category/";
+    const url = "http://127.0.0.1:8000/api/";
     const [openCategory, setOpenCategory] = useState(null);
     const [categories, setCategories] = useState([]);
-
+    const [brands, setBrands] = useState([]);
 
     const getCategory = async()=> {
-        let response = await fetch(url);
+        let response = await fetch(`${url}category/`);
         response = await response.json();
-
-        // console.log(response);
         setCategories(response);
     }
 
-    const fileterByCategory = (id) => {
-        setCategory(id);  
+    const getBrand = async()=> {
+        let response = await fetch(`${url}brand/`);
+        response = await response.json();
+        setBrands(response);
     }
+
+    const fileterByCategory = (id) => {
+        setCategory(id);    
+    }
+
+    const fileterByBrand = (id) => {
+        setBrand(id);  
+        // console.log(id);
+    }
+
+
 
     useEffect(() => {
         getCategory();
+        getBrand();
     }, [])
 
   return (
@@ -155,10 +162,15 @@ const LeftSide = ({setCategory}) => {
                 {brands.map((brand, idx) => (
                 <label key={idx} className="d-flex mb-2 justify-content-between align-items-center cursor-pointer text-secondary fw-medium">
                     <div className="d-flex align-items-center gap-2">
-                    <input type="checkbox" className="form-check-input shadow-none border" style={{ width: '16px', height: '16px' }} />
+                    <input 
+                        type="checkbox" 
+                        className="form-check-input shadow-none border" 
+                        style={{ width: '16px', height: '16px' }} 
+                        onClick={()=> fileterByBrand(brand.id)}
+                    />
                     <span>{brand.name}</span>
                     </div>
-                    <span className="text-muted small fw-bold">({brand.count})</span>
+                    <span className="text-muted small fw-bold">({brand.count}5)</span>
                 </label>
                 ))}
             </div>

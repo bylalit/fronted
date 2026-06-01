@@ -5,10 +5,10 @@ import RightSide from "../components/CategoryPageComp/RightSide";
 
 const Category = ({search}) => {
   const [category, setCategory] = useState("");
+  const [brand, setBrand] = useState("");
 
   return (
     <>
-
       <section className="w-100 pb-5" style={{ minHeight: '100vh', backgroundColor: '#fff', fontFamily: "'Poppins', sans-serif" }}>
         
         {/* BREADCRUMB HEADER SECTION */}
@@ -30,7 +30,7 @@ const Category = ({search}) => {
         <div className="container px-md-5 mt-5" >
           <div className="row g-4">
             
-            <LeftSide setCategory={setCategory} />
+            <LeftSide setCategory={setCategory} setBrand={setBrand} />
 
             <RightSide search={search} category= {category} setCategory={setCategory} />
 

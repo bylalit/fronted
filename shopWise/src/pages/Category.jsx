@@ -32,7 +32,7 @@ const Category = ({search}) => {
             
             <LeftSide setCategory={setCategory} setBrand={setBrand} />
 
-            <RightSide search={search} category= {category} setCategory={setCategory} />
+            <RightSide search={search} category= {category} brand={brand} setCategory={setCategory} />
 
           </div>
         </div>

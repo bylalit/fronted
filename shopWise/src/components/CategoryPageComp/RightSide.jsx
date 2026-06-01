@@ -3,7 +3,7 @@ import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../../context/AuthContext";
 
-const RightSide = ({search, category, setCategory}) => {
+const RightSide = ({search, category, setCategory, brand}) => {
 
     let [products, setProducts] = useState([]); 
     const navigate = useNavigate();
@@ -35,6 +35,12 @@ const RightSide = ({search, category, setCategory}) => {
         param.push(`sort=${sort}`)
     }
 
+    if(brand){
+        console.log(brand);
+        
+        param.push(`brand=${brand}`)
+    }
+
     if(param.length > 0){
         url += "?" + param.join("&");
     }
@@ -50,10 +56,9 @@ const RightSide = ({search, category, setCategory}) => {
     }
 
 
-
     useEffect(() => {
         getProduct();
-    }, [search, category, liveSearch, price, sort])
+    }, [search, category, liveSearch, price, sort, brand])
   
   return (
     <>

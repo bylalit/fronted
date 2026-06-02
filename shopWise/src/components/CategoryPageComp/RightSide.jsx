@@ -4,7 +4,8 @@ import { AuthContext } from "../../context/AuthContext";
 
 const RightSide = ({search, category, setCategory, brand}) => {
 
-    let [products, setProducts] = useState([]); 
+    
+    let [productData, setProductData] = useState({ count: 0, results: [] }); 
     const navigate = useNavigate();
     const location = useLocation();
     const [liveSearch, setLiveSearch] = useState("");
@@ -12,16 +13,20 @@ const RightSide = ({search, category, setCategory, brand}) => {
     const [sort, setSort] = useState("");
     const { wishlistItems, toggleWishlist, addToCart } = useContext(AuthContext);
 
+    
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 12; 
 
     const queryParams = new URLSearchParams(location.search);
     const categoryId = queryParams.get("id");
-    // console.log("Active Query String Category ID:", categoryId);
 
     const { setGlobalLoading } = useContext(AuthContext);
       
-
     let url = "http://127.0.0.1:8000/api/product/";
     let param = [];
+
+    // 🎯 PAGINATION ATTENTION INJECTOR
+    param.push(`page=${currentPage}`);
 
     if(search){
         param.push(`search=${search}`)
@@ -30,7 +35,6 @@ const RightSide = ({search, category, setCategory, brand}) => {
     if(liveSearch.length > 0){
         param.push(`search=${liveSearch}`)
     }
-    
     
     const finalCategoryFilter = category || categoryId;
     if(finalCategoryFilter){
@@ -56,20 +60,49 @@ const RightSide = ({search, category, setCategory, brand}) => {
 
     const getProduct = async ()=>{
         setGlobalLoading(true);
-        let response = await fetch(url);
-        response = await response.json();
-        setProducts(response);
-        setGlobalLoading(false);
+        try {
+            let response = await fetch(url);
+            response = await response.json();
+            
+            // Django Paginated payload matrix check bindings logic
+            if (response && response.results) {
+                setProductData(response);
+            } else if (Array.isArray(response)) {
+                setProductData({ count: response.length, results: response });
+            }
+        } catch (error) {
+            console.error("Error logging products pagination array node strings:", error);
+        } finally {
+            setGlobalLoading(false);
+        }
     }
 
     const productShowData = (id) => {
         navigate("/productDetails/"+id);
     }
 
+    // Reset target active pagination page index whenever filter parameters mutates natively
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [search, category, location.search, liveSearch, price, sort, brand]);
 
     useEffect(() => {
         getProduct();
-    }, [search, category, location.search, liveSearch, price, sort, brand]) 
+    }, [currentPage, search, category, location.search, liveSearch, price, sort, brand]);
+
+    // 🧠 Dynamic Page calculations matrix helper rules
+    const totalPages = Math.ceil(productData.count / itemsPerPage) || 1;
+
+    const handlePageChange = (pageNo) => {
+        if (pageNo >= 1 && pageNo <= totalPages) {
+            setCurrentPage(pageNo);
+            window.scrollTo({ top: 0, behavior: 'smooth' }); // Smooth scrolls window back to view viewport grids
+        }
+    };
+
+    // 🆕 PRODUCTION MATH: Dynamic showing ranges logic calculations (e.g. "Showing 1–12 of 45 products")
+    const startItem = productData.count === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
+    const endItem = Math.min(currentPage * itemsPerPage, productData.count);
   
   return (
     <>
@@ -101,13 +134,12 @@ const RightSide = ({search, category, setCategory, brand}) => {
                 background-color: #0AA586;
                 color: white !important;
             }
-            /* 🆕 Safe Title Multi-line Handling */
             .product-title-clamp {
                 display: -webkit-box;
                 -webkit-line-clamp: 2;
                 -webkit-box-orient: vertical;
                 overflow: hidden;
-                height: 48px; /* Fixed multi-line slot constraint */
+                height: 48px;
                 line-height: 24px;
             }
         `}</style>
@@ -150,6 +182,7 @@ const RightSide = ({search, category, setCategory, brand}) => {
                         <select 
                             className="form-select border shadow-none bg-light fw-semibold text-secondary" 
                             style={{ fontSize: '14px', padding: '8px' }}
+                            value={price}
                             onChange={(e) => setPrice(e.target.value)}
                         >
                             <option value="">All Prices</option>
@@ -163,6 +196,7 @@ const RightSide = ({search, category, setCategory, brand}) => {
                         <select 
                             className="form-select border shadow-none bg-light fw-semibold text-secondary" 
                             style={{ fontSize: '14px', padding: '8px' }}
+                            value={sort}
                             onChange={(e) => setSort(e.target.value)}
                         >
                             <option value="">Featured</option>
@@ -174,7 +208,7 @@ const RightSide = ({search, category, setCategory, brand}) => {
                     <div className="col-6 col-sm-3">
                         <label className="text-dark fw-bold small mb-1.5" style={{ fontSize: '13px' }}>Items Per Page</label>
                         <select className="form-select border shadow-none bg-light fw-semibold text-secondary" style={{ fontSize: '14px', padding: '8px' }}>
-                            <option>12 items</option>
+                            <option>{itemsPerPage} items</option>
                         </select>
                     </div>
                     <div className="col-6 col-sm-3">
@@ -264,140 +298,171 @@ const RightSide = ({search, category, setCategory, brand}) => {
             
 
             {/* Products Cards Layout Matrix Grid */}
-            <div className="row g-4 row-cols-1 row-cols-sm-2 row-cols-md-3 mb-5 mt-2">
-               {products?.map((product) => {
-                    
-                    const isFavorite = wishlistItems?.some(item => item.product === product.id);
+            {productData.results?.length === 0 ? (
+                <div className="text-center py-5 border border-dashed rounded bg-light text-muted my-3">
+                    <i className="bi bi-box-open display-2"></i>
+                    <h5 className="mt-3 fw-bold">No Product Found!</h5>
+                    <p className="small">Kripya koi doosra filter ya keyword try karein.</p>
+                </div>
+            ) : (
+                <div className="row g-4 row-cols-1 row-cols-sm-2 row-cols-md-3 mb-5 mt-2">
+                {productData.results?.map((product) => {
+                        
+                        const isFavorite = wishlistItems?.some(item => item.product === product.id);
 
-                    return (
-                        <div className="col d-flex" key={product.id}>
-                            <div className="card product-card-wrap w-100 border rounded-3 bg-white shadow-sm overflow-hidden d-flex flex-column position-relative">
-                                
-                                <div
-                                    className="position-relative p-3 bg-light text-center d-flex align-items-center justify-content-center overflow-hidden flex-shrink-0"
-                                    style={{ height: '240px' }} 
-                                >
-                                {product.badge_tag && (
-                                    <span
-                                        className="position-absolute top-0 start-0 m-3 badge rounded-2 px-2 py-1.5 fw-bold z-2"
-                                        style={{ backgroundColor: '#198754', color: '#fff', fontSize: '11px' }}
+                        return (
+                            <div className="col d-flex" key={product.id}>
+                                <div className="card product-card-wrap w-100 border rounded-3 bg-white shadow-sm overflow-hidden d-flex flex-column position-relative">
+                                    
+                                    <div
+                                        className="position-relative p-3 bg-light text-center d-flex align-items-center justify-content-center overflow-hidden flex-shrink-0"
+                                        style={{ height: '240px' }} 
                                     >
-                                        {product.badge_tag}
-                                    </span>
-                                )}
-
-                                <img
-                                    src={product.images.find((img) => img.is_primary)?.image_url}
-                                    alt={product.title}
-                                    className="w-100 h-100"
-                                    style={{  mixBlendMode: 'multiply' }} 
-                                />
-
-                                {/* Hover Interaction Overlay */}
-                                <div
-                                    className="hover-actions position-absolute w-100 h-100 top-0 start-0 d-flex align-items-center justify-content-center gap-2 z-1"
-                                    style={{ backgroundColor: 'rgba(15, 44, 89, 0.2)' }}
-                                >
-                                    <button
-                                        onClick={() => toggleWishlist(product.id)}
-                                        className="action-icon-btn border-0"
-                                        title={isFavorite ? "Remove from Wishlist" : "Add to Wishlist"}
-                                    >
-                                        <i className={`bi bi-heart-fill ${isFavorite ? 'text-danger' : 'text-muted'}`}></i>
-                                    </button>
-
-                                    <button onClick={() => productShowData(product.id)}
-                                        className="action-icon-btn border-0"
-                                        title="Quick View"
-                                    >
-                                        <i className="bi bi-eye-fill"></i>
-                                    </button>
-                                </div>
-                                </div>
-
-                                <div className="p-3 d-flex flex-column flex-grow-1 justify-content-between">
-                                    <div className="mb-3">
+                                    {product.badge_tag && product.badge_tag !== "NONE" && (
                                         <span
-                                            className="text-muted fw-bold d-block mb-1 text-uppercase"
-                                            style={{ fontSize: '11px', letterSpacing: '0.5px' }}
+                                            className="position-absolute top-0 start-0 m-3 badge rounded-2 px-2 py-1.5 fw-bold z-2"
+                                            style={{ backgroundColor: '#198754', color: '#fff', fontSize: '11px' }}
                                         >
-                                            {product.category_name}
+                                            {product.badge_tag}
                                         </span>
+                                    )}
 
-                                        <h5
-                                            className="fw-bold mb-2 text-dark product-title-clamp"
-                                            style={{ fontSize: '15px' }}
-                                            title={product.title}
-                                        >
-                                            {product.title}
-                                        </h5>
+                                    <img
+                                        src={product.images?.find((img) => img.is_primary)?.image_url || product.images?.[0]?.image_url || "https://placeholder.com/240"}
+                                        alt={product.title}
+                                        className="w-100 h-100"
+                                        style={{ objectFit: 'contain', mixBlendMode: 'multiply' }} 
+                                    />
 
-                                        {/* Rating Framework Slot */}
-                                        <div
-                                            className="text-warning small d-flex align-items-center gap-1"
-                                            style={{ fontSize: '12px' }}
+                                    {/* Hover Interaction Overlay */}
+                                    <div
+                                        className="hover-actions position-absolute w-100 h-100 top-0 start-0 d-flex align-items-center justify-content-center gap-2 z-1"
+                                        style={{ backgroundColor: 'rgba(15, 44, 89, 0.2)' }}
+                                    >
+                                        <button
+                                            type="button"
+                                            onClick={() => toggleWishlist(product.id)}
+                                            className="action-icon-btn border-0"
+                                            title={isFavorite ? "Remove from Wishlist" : "Add to Wishlist"}
                                         >
-                                            <i className="bi bi-star-fill"></i>
-                                            <i className="bi bi-star-fill"></i>
-                                            <i className="bi bi-star-fill"></i>
-                                            <i className="bi bi-star-fill"></i>
-                                            <i className="bi bi-star-fill text-black-50 opacity-25"></i>
-                                            <span className="text-muted ms-1 fw-medium">(120)</span>
-                                        </div>
+                                            <i className={`bi bi-heart-fill ${isFavorite ? 'text-danger' : 'text-muted'}`}></i>
+                                        </button>
+
+                                        <button type="button" onClick={() => productShowData(product.id)}
+                                            className="action-icon-btn border-0"
+                                            title="Quick View"
+                                        >
+                                            <i className="bi bi-eye-fill"></i>
+                                        </button>
+                                    </div>
                                     </div>
 
-                                    <div className="d-flex align-items-center justify-content-between pt-2 border-top mt-auto">
-                                        <div className="d-flex flex-column">
-                                            <span className="fw-bold fs-5 text-dark lh-sm">
-                                                ${product.price}
+                                    <div className="p-3 d-flex flex-column flex-grow-1 justify-content-between">
+                                        <div className="mb-3">
+                                            <span
+                                                className="text-muted fw-bold d-block mb-1 text-uppercase"
+                                                style={{ fontSize: '11px', letterSpacing: '0.5px' }}
+                                            >
+                                                {product.category_name}
                                             </span>
-                                            {product.old_price && (
-                                                <span className="text-muted text-decoration-line-through x-small" style={{ fontSize: '12px' }}>
-                                                    ${product.old_price}
-                                                </span>
-                                            )}
+
+                                            <h5
+                                                className="fw-bold mb-2 text-dark product-title-clamp"
+                                                style={{ fontSize: '15px', cursor: 'pointer' }}
+                                                onClick={() => productShowData(product.id)}
+                                                title={product.title}
+                                            >
+                                                {product.title}
+                                            </h5>
+
+                                            {/* Rating Framework Slot */}
+                                            <div
+                                                className="text-warning small d-flex align-items-center gap-1"
+                                                style={{ fontSize: '12px' }}
+                                            >
+                                                <i className="bi bi-star-fill"></i>
+                                                <i className="bi bi-star-fill"></i>
+                                                <i className="bi bi-star-fill"></i>
+                                                <i className="bi bi-star-fill"></i>
+                                                <i className="bi bi-star-fill text-black-50 opacity-25"></i>
+                                                <span className="text-muted ms-1 fw-medium">(5.0)</span>
+                                            </div>
                                         </div>
 
-                                        <button
-                                            className="btn text-white fw-bold border-0 shadow-sm"
-                                            style={{ backgroundColor: '#0AA586', borderRadius: '5px', fontSize: '12px', padding: '8px 12px', whiteSpace: 'nowrap' }}
-                                            onClick={() => addToCart(product.id)}
-                                        >
-                                            Add to Cart
-                                        </button>
+                                        <div className="d-flex align-items-center justify-content-between pt-2 border-top mt-auto">
+                                            <div className="d-flex flex-column">
+                                                <span className="fw-bold fs-5 text-dark lh-sm">
+                                                    ${product.price}
+                                                </span>
+                                                {product.old_price && (
+                                                    <span className="text-muted text-decoration-line-through x-small" style={{ fontSize: '12px' }}>
+                                                        ${product.old_price}
+                                                    </span>
+                                                )}
+                                            </div>
+
+                                            <button
+                                                type="button"
+                                                className="btn text-white fw-bold border-0 shadow-sm"
+                                                style={{ backgroundColor: '#0AA586', borderRadius: '5px', fontSize: '12px', padding: '8px 12px', whiteSpace: 'nowrap' }}
+                                                onClick={() => addToCart(product.id, 1)}
+                                            >
+                                                Add to Cart
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    );
-               })}
-            </div>
-
-            {/* Pagination Interface Control Footer */}
-            <div className="card border-0 p-3 rounded-3 bg-white shadow-sm border d-flex flex-wrap flex-sm-nowrap justify-content-between align-items-center gap-3">
-            <span className="text-muted fw-medium style-text-results" style={{ fontSize: '14px' }}>Page <strong className="text-dark fw-bold">1</strong> of <strong className="text-dark fw-bold">10</strong> · Showing results</span>
-            
-            <div className="d-flex align-items-center gap-3 flex-wrap">
-                <nav aria-label="Product navigation page items">
-                <ul className="pagination pagination-sm mb-0 align-items-center gap-1">
-                    <li className="page-item disabled"><span className="page-link border rounded-2 px-2.5 py-1.5"><i className="bi bi-arrow-left"></i></span></li>
-                    <li className="page-item active"><span className="page-link border rounded-2 px-3 py-1.5 fw-bold" style={{ backgroundColor: '#0AA586', borderColor: '#0AA586' }}>1</span></li>
-                    <li className="page-item"><a className="page-link border rounded-2 px-3 py-1.5 text-secondary fw-semibold" href="#page2">2</a></li>
-                    <li className="page-item"><a className="page-link border rounded-2 px-3 py-1.5 text-secondary fw-semibold" href="#page3">3</a></li>
-                    <li className="page-item disabled"><span className="px-1 text-muted fw-bold">...</span></li>
-                    <li className="page-item"><a className="page-link border rounded-2 px-3 py-1.5 text-secondary fw-semibold" href="#page9">9</a></li>
-                    <li className="page-item"><a className="page-link border rounded-2 px-3 py-1.5 text-secondary fw-semibold" href="#page10">10</a></li>
-                    <li className="page-item"><a className="page-link border rounded-2 px-2.5 py-1.5 text-secondary" href="#page2"><i className="bi bi-arrow-right"></i></a></li>
-                </ul>
-                </nav>
-
-                <div className="d-flex align-items-center gap-1.5" style={{ fontSize: '14px' }}>
-                <span className="text-muted fw-medium">Go to</span>
-                <input type="text" className="form-control text-center border shadow-none bg-transparent fw-bold" defaultValue="1" style={{ width: '42px', height: '34px', borderRadius: '5px' }} />
-                <button className="btn btn-sm btn-light border px-3 fw-bold" style={{ height: '34px' }}>Go</button>
+                        );
+                })}
                 </div>
-            </div>
-            </div>
+            )}
+
+            {/* 🎯 PAGINATION COMPONENT SYNC INTERFACE BLOCK */}
+            {productData.results?.length > 0 && (
+                <div className="card border-0 p-3 rounded-3 bg-white shadow-sm border d-flex flex-wrap flex-sm-nowrap justify-content-between align-items-center gap-3">
+                    {/* 🆕 UPDATED: Real dynamic counting ranges string label inject */}
+                    <span className="text-muted fw-medium style-text-results" style={{ fontSize: '14px' }}>
+                        Showing <strong className="text-dark fw-bold">{startItem}–{endItem}</strong> of <strong className="text-dark fw-bold">{productData.count}</strong> products
+                    </span>
+                
+                    <div className="d-flex align-items-center gap-3 flex-wrap">
+                        <nav aria-label="Product navigation page items">
+                        <ul className="pagination pagination-sm mb-0 align-items-center gap-1">
+                            {/* Previous Button Handler */}
+                            <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`} style={{ cursor: "pointer" }}>
+                                <span className="page-link border rounded-2 px-2.5 py-1.5" onClick={() => handlePageChange(currentPage - 1)}>
+                                    <i className="bi bi-arrow-left"></i>
+                                </span>
+                            </li>
+
+                            {/* Page Numbers Mapping */}
+                            {Array.from({ length: totalPages }).map((_, idx) => {
+                                const pageNumber = idx + 1;
+                                return (
+                                    <li key={pageNumber} className={`page-item ${currentPage === pageNumber ? 'active' : ''}`} style={{ cursor: "pointer" }}>
+                                        <span 
+                                            className="page-link border rounded-2 px-3 py-1.5 fw-bold" 
+                                            style={currentPage === pageNumber ? { backgroundColor: '#0AA586', borderColor: '#0AA586', color: '#fff' } : { color: '#4A5568' }}
+                                            onClick={() => handlePageChange(pageNumber)}
+                                        >
+                                            {pageNumber}
+                                        </span>
+                                    </li>
+                                );
+                            })}
+
+                            {/* Next Button Handler */}
+                            <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`} style={{ cursor: "pointer" }}>
+                                <span className="page-link border rounded-2 px-2.5 py-1.5" onClick={() => handlePageChange(currentPage + 1)}>
+                                    <i className="bi bi-arrow-right"></i>
+                                </span>
+                            </li>
+                        </ul>
+                        </nav>
+                    </div>
+                </div>
+            )}
 
         </div> 
     </>

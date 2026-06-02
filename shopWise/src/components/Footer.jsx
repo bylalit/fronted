@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 
 
 const Footer = () => {
@@ -40,9 +41,11 @@ const Footer = () => {
             
             {/* Column 1: Company Brand & Details */}
             <div className="col-12 col-md-6 col-lg-3">
-              <h3 className="fw-bold mb-4" style={{ color: '#0F2C59', letterSpacing: '-0.5px' }}>
-                ShopWise
-              </h3>
+              <Link to="/" className="text-decoration-none">
+                <span className="fs-2 fw-bold text-dark" style={{ color: '#0F2C59', letterSpacing: '1px', fontSize: '22px', fontFamily: "'Poppins', sans-serif" }}>
+                  Shop<span style={{ color: '#0AA586' }}>Wise</span>
+                </span>
+              </Link>
               <p className="text-muted lh-base mb-4" style={{ fontSize: '15px' }}>
                 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam in nibh vehicula, facilisis magna ut, consectetur lorem.
               </p>

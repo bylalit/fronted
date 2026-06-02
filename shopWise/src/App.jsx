@@ -12,12 +12,16 @@ import Checkout from './pages/Checkout'
 import Register from './pages/Register'
 import Login from './pages/Login'
 import UserAcoount from './pages/UserAcoount'
-import { useState } from 'react'
+import { useContext, useState } from 'react'
 import { Toaster } from 'react-hot-toast';
+import { AuthContext } from './context/AuthContext'
+import Loader from './components/Loader'
 
 function App() {
 
   const [search, setSearch] = useState("")
+  const { globalLoading } = useContext(AuthContext);
+
   return (
     <>
         <Toaster 
@@ -36,6 +40,7 @@ function App() {
         }} 
       />
         <Navbar setSearch={setSearch} />
+        {globalLoading && <Loader />}
         <Routes>
           <Route path='/' element={<Home />} />
           <Route path='/about' element={<About />} />

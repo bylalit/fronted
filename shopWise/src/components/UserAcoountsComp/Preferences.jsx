@@ -1,6 +1,6 @@
-import  { useContext, useState } from 'react';
+import { useContext, useState } from 'react';
 import { AuthContext } from '../../context/AuthContext';
-import {  useForm  } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 
 const Preferences = () => {
@@ -11,46 +11,49 @@ const Preferences = () => {
     digest: true
   });
   
-  const { userProfile, getUser } = useContext(AuthContext);
+  // 🎯 Context se setGlobalLoading ko destructure kiya
+  const { userProfile, getUser, setGlobalLoading } = useContext(AuthContext);
 
-  const {register, handleSubmit} = useForm();
+  const { register, handleSubmit } = useForm();
 
-  const onSubmit = async (data)=> {
-    console.log(data);
-    const token = localStorage.getItem("accessToken")
-    if(!token){
-        toast.error("Session expried. Please log in again.")
+  const onSubmit = async (data) => {
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
+        toast.error("Session expired. Please log in again.");
         return;
     }
 
+    setGlobalLoading(true); 
     const url = "http://127.0.0.1:8000/api/user/me/";
 
-    const response = await fetch(url, {
-        method: 'PATCH',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-            first_name: data.first_name,
-            last_name: data.last_name,
-            email: data.email,
-            phone: data.phone
-        })
-    });
+    try {
+        const response = await fetch(url, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                first_name: data.first_name,
+                last_name: data.last_name,
+                email: data.email,
+                phone: data.phone
+            })
+        });
 
-    if(response.ok){
-        const result = await response.json();
-        toast.success("Profile updated successfully!");
-
-        await getUser();
-    }else {
-        const errorData = await response.json();
-        toast.error("Failed to update profile. Please check the fields.");
+        if (response.ok) {
+            toast.success("Profile updated successfully! ✨");
+            await getUser(); 
+        } else {
+            toast.error("Failed to update profile. Please check the fields.");
+        }
+    } catch (error) {
+        console.error("Profile update error:", error);
+        toast.error("Server connection failed.");
+    } finally {
+        setGlobalLoading(false); 
     }
-
-
-  }
+  };
 
   return (
     <div>
@@ -72,7 +75,7 @@ const Preferences = () => {
                 defaultValue={userProfile?.first_name} 
                 style={{ borderRadius: '6px', fontSize: '14px' }} 
                 {...register("first_name")}
-            />
+              />
             </div>
             <div className="col-12 col-sm-6">
               <label className="form-label small fw-bold text-secondary mb-1.5">Last Name</label>
@@ -82,7 +85,7 @@ const Preferences = () => {
                 defaultValue={userProfile?.last_name} 
                 style={{ borderRadius: '6px', fontSize: '14px' }} 
                 {...register("last_name")}
-            />
+              />
             </div>
             <div className="col-12 col-sm-6">
               <label className="form-label small fw-bold text-secondary mb-1.5">Email Address</label>
@@ -92,7 +95,7 @@ const Preferences = () => {
                 defaultValue={userProfile?.email} 
                 style={{ borderRadius: '6px', fontSize: '14px' }} 
                 {...register("email")}    
-            />
+              />
             </div>
             <div className="col-12 col-sm-6">
               <label className="form-label small fw-bold text-secondary mb-1.5">Phone Number</label>
@@ -102,7 +105,7 @@ const Preferences = () => {
                 defaultValue={userProfile?.phone} 
                 style={{ borderRadius: '6px', fontSize: '14px' }} 
                 {...register("phone")}
-            />
+              />
             </div>
           </div>
           <div className="text-end">
@@ -164,7 +167,8 @@ const Preferences = () => {
         <form onSubmit={(e) => e.preventDefault()}>
           <div className="mb-3">
             <label className="form-label small fw-bold text-secondary mb-1.5">Current Password</label>
-            <input type="password" dclassName="form-control bg-light bg-opacity-25 shadow-none border py-2 px-3" placeholder="••••••••" style={{ borderRadius: '6px', fontSize: '14px' }} />
+            {/* 🎯 FIXED: Removed typo dclassName to className */}
+            <input type="password" className="form-control bg-light bg-opacity-25 shadow-none border py-2 px-3" placeholder="••••••••" style={{ borderRadius: '6px', fontSize: '14px' }} />
           </div>
           <div className="row g-3 mb-3">
             <div className="col-12 col-sm-6">

@@ -1,68 +1,83 @@
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
+import { AuthContext } from '../../context/AuthContext';
 
 const LeftSide = ({ setCategory, setBrand }) => {
-  const colors = ["#000000", "#ffffff", "#EF4444", "#3B82F6", "#22C55E", "#EAB308", "#A855F7", "#F97316", "#EC4899", "#78350F"];
+  // const colors = ["#000000", "#ffffff", "#EF4444", "#3B82F6", "#22C55E", "#EAB308", "#A855F7", "#F97316", "#EC4899", "#78350F"];
 
   const url = "http://127.0.0.1:8000/api/";
   const [openCategory, setOpenCategory] = useState(null);
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
   
-  // 🆕 MULTIPLE BRANDS TRACKING STATE
+  // MULTIPLE BRANDS TRACKING STATE
   const [selectedBrands, setSelectedBrands] = useState([]);
-  const [brandSearchTerm, setBrandSearchTerm] = useState(""); // Brand internal dynamic search input string
+  const [brandSearchTerm, setBrandSearchTerm] = useState(""); 
+
+  // 🎯 Context se global loading controller nikala
+  const { setGlobalLoading } = useContext(AuthContext);
 
   const getCategory = async () => {
     let response = await fetch(`${url}category/`);
-    response = await response.json();
-    setCategories(response);
+    return await response.json();
   };
 
   const getBrand = async () => {
     let response = await fetch(`${url}brand/`);
-    response = await response.json();
-    setBrands(response);
+    return await response.json();
+  };
+
+  // 🎯 FIX: Dono API calls ko load hone tak global loader handle kiya
+  const initSidebarData = async () => {
+    setGlobalLoading(true); // 🔄 Network pipe start hote hi loader open
+    try {
+      // Promise.all se dono requests ek sath parallel chalengi
+      const [categoriesData, brandsData] = await Promise.all([
+        getCategory(),
+        getBrand()
+      ]);
+      
+      setCategories(categoriesData);
+      setBrands(brandsData);
+    } catch (error) {
+      console.error("Error loading sidebar metadata:", error);
+    } finally {
+      setGlobalLoading(false); // 🏁 Data set hote hi loader closed safely
+    }
   };
 
   const fileterByCategory = (id) => {
     setCategory(id);    
   };
 
-  // 🎯 FIX: Input checkbox validation toggle logic framework
+  // Input checkbox validation toggle logic framework
   const handleBrandCheckboxChange = (brandId) => {
     let updatedBrands = [];
     
     if (selectedBrands.includes(brandId)) {
-      // Agar ID pehle se array me hai, toh use nikal do (Untick)
       updatedBrands = selectedBrands.filter(id => id !== brandId);
     } else {
-      // Agar ID nahi hai, toh use array me push karo (Tick)
       updatedBrands = [...selectedBrands, brandId];
     }
 
     setSelectedBrands(updatedBrands);
 
-    // 🚀 Parent component ko comma-separated list bhejenge (e.g., "1,2,4")
-    // Agar aapka backend single ID accept karta hai, toh bas updatedBrands[updatedBrands.length - 1] ya direct array string pass karein
     if (updatedBrands.length === 0) {
-      setBrand(""); // Clear filter if no brands selected
+      setBrand(""); 
     } else {
-      setBrand(updatedBrands.join(",")); // Sync state directly with your view query params
+      setBrand(updatedBrands.join(",")); 
     }
   };
 
-  // 🗑️ Clear all active checked bounds parameters
+  // Clear all active checked bounds parameters
   const handleClearAllBrands = () => {
     setSelectedBrands([]);
     setBrand("");
   };
 
   useEffect(() => {
-    getCategory();
-    getBrand();
+    initSidebarData(); 
   }, []);
 
-  // Filter brands locally based on inner sidebar input text parameters
   const filteredBrandsList = brands.filter(brand => 
     brand.name?.toLowerCase().includes(brandSearchTerm.toLowerCase())
   );
@@ -70,7 +85,7 @@ const LeftSide = ({ setCategory, setBrand }) => {
   return (
     <>
       {/* ==================== LEFT SIDEBAR FILTER CONTROLS ==================== */}
-      <div className="col-12 col-lg-4">
+      <div className="col-12 col-lg-3">
 
         {/* 1. Category Card */}
         <div className="card border-0 p-4 rounded-3 mb-4 shadow-sm border" style={{ backgroundColor: '#F8FAFC' }}>
@@ -117,7 +132,7 @@ const LeftSide = ({ setCategory, setBrand }) => {
         </div>
 
         {/* 2. Color Filter Card */}
-        <div className="card border-0 p-4 rounded-3 mb-4 shadow-sm border" style={{ backgroundColor: '#F8FAFC' }}>
+        {/* <div className="card border-0 p-4 rounded-3 mb-4 shadow-sm border" style={{ backgroundColor: '#F8FAFC' }}>
           <h5 className="fw-bold mb-3 border-start border-4 border-success ps-2" style={{ color: '#0F2C59', fontSize: '18px' }}>Filter by Color</h5>
           <div className="d-flex flex-wrap gap-2 mb-4 pt-2">
             {colors.map((color, idx) => (
@@ -138,7 +153,7 @@ const LeftSide = ({ setCategory, setBrand }) => {
             <button className="btn btn-sm btn-light border px-3 fw-semibold text-secondary" style={{ fontSize: '13px' }}>Clear All</button>
             <button className="btn btn-sm text-white px-3 fw-semibold" style={{ backgroundColor: '#0AA586', fontSize: '13px' }}>Apply Filter</button>
           </div>
-        </div>
+        </div> */}
 
         {/* 3. Brand Filter Card */}
         <div className="card border-0 p-4 rounded-3 shadow-sm border" style={{ backgroundColor: '#F8FAFC' }}>
@@ -169,13 +184,12 @@ const LeftSide = ({ setCategory, setBrand }) => {
                       className="form-check-input shadow-none border" 
                       style={{ width: '16px', height: '16px', cursor: 'pointer' }} 
                       checked={selectedBrands.includes(brand.id)}
-                      onChange={() => handleBrandCheckboxChange(brand.id)} // 🎯 Triggered live on checkbox state mutation
+                      onChange={() => handleBrandCheckboxChange(brand.id)} 
                     />
                     <span className={selectedBrands.includes(brand.id) ? "text-success fw-bold" : ""}>
                       {brand.name}
                     </span>
                   </div>
-                  {/* Safe boundary allocation validation for brand counts if exists */}
                   <span className="text-muted small fw-bold">
                     {brand.count !== undefined ? `(${brand.count})` : ''}
                   </span>

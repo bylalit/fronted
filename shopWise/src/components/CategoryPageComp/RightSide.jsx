@@ -1,16 +1,24 @@
 import { useContext, useEffect, useState } from "react";
-import toast from "react-hot-toast";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom"; 
 import { AuthContext } from "../../context/AuthContext";
 
 const RightSide = ({search, category, setCategory, brand}) => {
 
     let [products, setProducts] = useState([]); 
     const navigate = useNavigate();
+    const location = useLocation();
     const [liveSearch, setLiveSearch] = useState("");
     const [price, setPrice] = useState("");
     const [sort, setSort] = useState("");
     const { wishlistItems, toggleWishlist, addToCart } = useContext(AuthContext);
+
+
+    const queryParams = new URLSearchParams(location.search);
+    const categoryId = queryParams.get("id");
+    // console.log("Active Query String Category ID:", categoryId);
+
+    const { setGlobalLoading } = useContext(AuthContext);
+      
 
     let url = "http://127.0.0.1:8000/api/product/";
     let param = [];
@@ -23,8 +31,10 @@ const RightSide = ({search, category, setCategory, brand}) => {
         param.push(`search=${liveSearch}`)
     }
     
-    if(category){
-        param.push(`category=${category}`)
+    
+    const finalCategoryFilter = category || categoryId;
+    if(finalCategoryFilter){
+        param.push(`category=${finalCategoryFilter}`)
     }
 
     if(price){
@@ -37,7 +47,6 @@ const RightSide = ({search, category, setCategory, brand}) => {
 
     if(brand){
         console.log(brand);
-        
         param.push(`brand=${brand}`)
     }
 
@@ -46,9 +55,11 @@ const RightSide = ({search, category, setCategory, brand}) => {
     }
 
     const getProduct = async ()=>{
+        setGlobalLoading(true);
         let response = await fetch(url);
         response = await response.json();
         setProducts(response);
+        setGlobalLoading(false);
     }
 
     const productShowData = (id) => {
@@ -58,7 +69,7 @@ const RightSide = ({search, category, setCategory, brand}) => {
 
     useEffect(() => {
         getProduct();
-    }, [search, category, liveSearch, price, sort, brand])
+    }, [search, category, location.search, liveSearch, price, sort, brand]) 
   
   return (
     <>
@@ -102,7 +113,7 @@ const RightSide = ({search, category, setCategory, brand}) => {
         `}</style>
 
         {/* RIGHT PRODUCTS GRID & CONFIG BAR  */}
-        <div className="col-12 col-lg-8">
+        <div className="col-12 col-lg-9">
             
             {/* Top Toolbar Utilities Panel */}
             <div className="card border-0 p-3 rounded-3 mb-4 bg-white shadow-sm border">
@@ -185,7 +196,7 @@ const RightSide = ({search, category, setCategory, brand}) => {
 
             {/* Active Filter Badges */}   
             {
-                (price || sort || liveSearch || category) && (
+                (price || sort || liveSearch || finalCategoryFilter) && (
                     <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4 px-1">
                         <div className="d-flex flex-wrap align-items-center gap-2" style={{ fontSize: '14px' }}>
                             <span className="text-muted fw-bold">Active filters:</span>
@@ -201,13 +212,13 @@ const RightSide = ({search, category, setCategory, brand}) => {
                                 )
                             }
                             {
-                                category && (
+                                finalCategoryFilter && (
                                     <span
                                         className="badge border rounded-pill px-3 py-2 d-flex align-items-center gap-2 fw-semibold"
                                         style={{ backgroundColor: '#E2F2EE', borderColor: '#C6E7E1', color: '#0AA586' }}
                                     >
-                                        Category : {category}
-                                        <i className="bi bi-x fs-6" style={{cursor: "pointer"}} onClick={() => setCategory("")}></i>
+                                        Category : {finalCategoryFilter}
+                                        <i className="bi bi-x fs-6" style={{cursor: "pointer"}} onClick={() => { setCategory(""); navigate("/category"); }}></i>
                                     </span>
                                 )
                             }
@@ -242,6 +253,7 @@ const RightSide = ({search, category, setCategory, brand}) => {
                                 setSort("");
                                 setLiveSearch("");
                                 setCategory("");
+                                navigate("/category");
                             }}
                         >
                             Reset All
@@ -259,12 +271,11 @@ const RightSide = ({search, category, setCategory, brand}) => {
 
                     return (
                         <div className="col d-flex" key={product.id}>
-                            {/* 🎯 FIX 1: Flex properties alignment on main wrap card */}
                             <div className="card product-card-wrap w-100 border rounded-3 bg-white shadow-sm overflow-hidden d-flex flex-column position-relative">
                                 
                                 <div
                                     className="position-relative p-3 bg-light text-center d-flex align-items-center justify-content-center overflow-hidden flex-shrink-0"
-                                    style={{ height: '240px' }} // Slightly adjusted image layout boundaries
+                                    style={{ height: '240px' }} 
                                 >
                                 {product.badge_tag && (
                                     <span
@@ -279,7 +290,7 @@ const RightSide = ({search, category, setCategory, brand}) => {
                                     src={product.images.find((img) => img.is_primary)?.image_url}
                                     alt={product.title}
                                     className="w-100 h-100"
-                                    style={{ objectFit: 'contain', mixBlendMode: 'multiply' }} // Handled backgrounds beautifully
+                                    style={{  mixBlendMode: 'multiply' }} 
                                 />
 
                                 {/* Hover Interaction Overlay */}
@@ -304,7 +315,6 @@ const RightSide = ({search, category, setCategory, brand}) => {
                                 </div>
                                 </div>
 
-                                {/* 🎯 FIX 2: Wrapped metadata into a clean, expanding structure using flex utilities */}
                                 <div className="p-3 d-flex flex-column flex-grow-1 justify-content-between">
                                     <div className="mb-3">
                                         <span
@@ -314,7 +324,6 @@ const RightSide = ({search, category, setCategory, brand}) => {
                                             {product.category_name}
                                         </span>
 
-                                        {/* Clamped title to protect formatting layout structure */}
                                         <h5
                                             className="fw-bold mb-2 text-dark product-title-clamp"
                                             style={{ fontSize: '15px' }}
@@ -337,7 +346,6 @@ const RightSide = ({search, category, setCategory, brand}) => {
                                         </div>
                                     </div>
 
-                                    {/* 🎯 FIX 3: Dynamic Price and Add To Cart safe positioning frame at absolute bottom */}
                                     <div className="d-flex align-items-center justify-content-between pt-2 border-top mt-auto">
                                         <div className="d-flex flex-column">
                                             <span className="fw-bold fs-5 text-dark lh-sm">

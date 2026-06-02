@@ -9,17 +9,33 @@ const Navbar = ({ setSearch }) => {
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [showCartDropdown, setShowCartDropdown] = useState(false);
 
-  // 🎯 Context se required cart controllers nikal liye
-  const { wishlistItems, userProfile, logout, cartData, getCart, removeFromCart } = useContext(AuthContext);
+  // 🎯 Context se required cart controllers aur setGlobalLoading nikal liya
+  const { wishlistItems, userProfile, logout, cartData, getCart, removeFromCart, setGlobalLoading } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const userRef = useRef(null);
   const cartRef = useRef(null);
   const [input, setInput] = useState("");
 
+  // 🎯 FIX 1: Search trigger hote hi screen par smooth glass loader active ho jayega
   const searchProduct = async () => {
+    if (!input.trim()) return;
+    
+    setGlobalLoading(true); // 🔄 Search backend processing animation trigger
     setSearch(input);
     navigate("/category");
+    
+    // Thoda sa micro-delay taaki routing smoothly resolve ho jaye
+    setTimeout(() => {
+      setGlobalLoading(false);
+    }, 400);
+  };
+
+  // Keyboard 'Enter' key press detect handler helper for search inputs
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      searchProduct();
+    }
   };
 
   const handleLogout = () => {
@@ -29,9 +45,7 @@ const Navbar = ({ setSearch }) => {
     navigate("/");
   };
 
-
   const miniCartItems = Array.isArray(cartData) ? cartData : (cartData?.items || []);
-  // const cartCount = miniCartItems.length; 
   const cartCount = miniCartItems ? miniCartItems.length : 0; 
   const cartSubtotal = miniCartItems.reduce((acc, item) => acc + (parseFloat(item.subtotal) || 0), 0);
   
@@ -79,13 +93,13 @@ const Navbar = ({ setSearch }) => {
             {/* Logo */}
             <div className="col-auto d-flex align-items-center">
               <Link to="/">
-                <div className="text-success fs-3 me-2">
+                <div className="text-success fs-1 me-2">
                   <i className="bi bi-cart3"></i>
                 </div>
               </Link>
               <Link to="/" className="text-decoration-none">
-                <span className="fs-2 fw-bold text-dark" style={{ letterSpacing: "-0.5px" }}>
-                  Shop<span style={{ color: "#0F2C59" }}>Wise</span>
+                <span className="fs-2 fw-bold text-dark" style={{ color: '#0F2C59', letterSpacing: '1px', fontSize: '22px', fontFamily: "'Poppins', sans-serif" }}>
+                  Shop<span style={{ color: '#0AA586' }}>Wise</span>
                 </span>
               </Link>
             </div>
@@ -98,7 +112,9 @@ const Navbar = ({ setSearch }) => {
                 </span>
                 <input
                   type="text"
+                  value={input}
                   onChange={(event) => setInput(event.target.value)}
+                  onKeyDown={handleKeyDown} // 🎯 Enter press karne par bhi search chalega safely
                   className="form-control border-0 shadow-none ps-2"
                   placeholder="Search for products, brands, and more..."
                   aria-label="Search"
@@ -157,6 +173,7 @@ const Navbar = ({ setSearch }) => {
                         </p>
                         <div className="d-flex mb-3">
                           <button
+                            type="button"
                             onClick={handleLogout}
                             className="btn btn-danger btn-sm flex-grow-1 fw-bold text-white border-0"
                             style={{ backgroundColor: "#dc3545", padding: "7px 0", fontSize: "13px" }}
@@ -209,10 +226,9 @@ const Navbar = ({ setSearch }) => {
                     setShowUserDropdown(false);
                   }}
                   className="position-relative pointer"
-                  style={{cursor:'pointer'}}
+                  style={{ cursor: 'pointer' }}
                 >
                   <i className="bi bi-bag text-dark fs-5"></i>
-                  {/* 🎯 Live Cart Total Items Badge Count Allocation */}
                   {cartCount > 0 && (
                     <span className="position-absolute top-0 start-100 translate-middle badge rounded-circle bg-success" style={{ fontSize: "10px", padding: "4px 6px", marginTop: "-2px" }}>
                       {cartCount}
@@ -242,11 +258,10 @@ const Navbar = ({ setSearch }) => {
                       <>
                         <div className="d-flex flex-column gap-2.5 overflow-auto mb-3" style={{ maxHeight: "240px" }}>
                           {miniCartItems.map((item) => {
-                            // 🎯 Key referenced dynamically to matching singular node 'product_detail'
                             const product = item.product_detail;
                             if (!product) return null;
 
-                            const primaryImg = product.images?.find(img => img.is_primary)?.image_url || product.images?.[0]?.image_url || product.images?.[0]?.image || "https://placeholder.com/100";
+                            const primaryImg = product.images?.find(img => img.is_primary)?.image_url || product.images?.[0]?.image_url || "https://placeholder.com/100";
 
                             return (
                               <div key={item.id} className="d-flex gap-2.5 align-items-center border-bottom pb-2.5">
@@ -267,8 +282,15 @@ const Navbar = ({ setSearch }) => {
                                     <span className="text-muted x-small">x{item.quantity}</span>
                                   </div>
                                 </div>
-                                {/* 🗑️ LIVE REMOVE ACTION ON HOVER DROPDOWN */}
-                                <button onClick={() => removeFromCart(product.id)} className="btn p-0 border-0 text-muted opacity-50 hover-danger ms-1">
+                                {/* 🗑️ LIVE REMOVE ACTION ON HOVER DROPDOWN WITH TOGGLE FIX */}
+                                <button 
+                                  type="button"
+                                  onClick={async () => {
+                                    await removeFromCart(product.id);
+                                    setShowCartDropdown(false); // 🎯 FIX 2: Delete karte hi drop box safely close ho jayega
+                                  }} 
+                                  className="btn p-0 border-0 text-muted opacity-50 hover-danger ms-1"
+                                >
                                   <i className="bi bi-trash small"></i>
                                 </button>
                               </div>
@@ -313,24 +335,25 @@ const Navbar = ({ setSearch }) => {
         <div className="container-fluid p-0">
           <div className="collapse navbar-collapse" id="navbarNavDropdown">
             <ul className="navbar-nav gap-3 align-items-center fw-medium" style={{ color: "#4A5568" }}>
-              <li className="nav-item">
+              <td className="nav-item">
                 <Link className="nav-link text-success active fw-semibold" to="/">Home</Link>
-              </li>
-              <li className="nav-item">
+              </td>
+              
+              <td className="nav-item">
                 <Link className="nav-link" to="/about">About</Link>
-              </li>
-              <li className="nav-item">
+              </td>
+              <td className="nav-item">
                 <Link className="nav-link" to="/category">Category</Link>
-              </li>
-              <li className="nav-item">
+              </td>
+              <td className="nav-item">
                 <Link className="nav-link" to="/cart">Cart</Link>
-              </li>
-              <li className="nav-item">
+              </td>
+              <td className="nav-item">
                 <Link className="nav-link" to="/checkout">Checkout</Link>
-              </li>
-              <li className="nav-item">
+              </td>
+              <td className="nav-item">
                 <Link className="nav-link" to="/contact">Contact</Link>
-              </li>
+              </td>
             </ul>
           </div>
         </div>

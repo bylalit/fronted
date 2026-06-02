@@ -5,16 +5,17 @@ import { useContext } from "react";
 import toast from "react-hot-toast";
 
 const Login = () => {
-
+  
+    const { setGlobalLoading } = useContext(AuthContext);
     const { register, handleSubmit } = useForm();
     const navigate = useNavigate();
 
     const { getUser } = useContext(AuthContext);
 
     const url = "http://127.0.0.1:8000/api/login/";
-
     const onSubmit = async(data) => {
-        // console.log(data);
+        setGlobalLoading(true);
+      
         const response = await fetch(url, {
             method: 'POST',
             headers: {
@@ -45,6 +46,7 @@ const Login = () => {
         await getUser();
 
         toast.success('Login Successful!');
+        setGlobalLoading(false);
         navigate('/');
     }
 

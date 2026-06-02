@@ -1,15 +1,19 @@
 import { Link, useNavigate } from "react-router-dom";
 import {  useForm  } from 'react-hook-form'
 import toast from "react-hot-toast";
+import { useContext } from "react";
+import { AuthContext } from "../context/AuthContext";
 
 const Register = () => {
 
     const { register, handleSubmit } = useForm();
     const navigate = useNavigate();
+    const { setGlobalLoading } = useContext(AuthContext);
 
     const url = "http://127.0.0.1:8000/api/user/";
 
     const onSubmit = async (data)=> {
+        setGlobalLoading(true);
         // console.log(data);
         if(data.password !== data.comform_password){
             toast.error("Password and Comfirm Password do not match!");
@@ -49,6 +53,7 @@ const Register = () => {
                 toast.error("Register failed. Pleaase check your details.");
             }
         }
+        setGlobalLoading(false);
     }
 
   return (

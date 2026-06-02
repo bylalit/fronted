@@ -1,32 +1,35 @@
+import { useContext, useEffect, useState } from "react";
+import { Link } from "react-router-dom"; // Link fallback structure updates
+import { AuthContext } from "../../context/AuthContext";
 
 const LookBack = () => {
-  // Category section data matching your screenshot cards
-  const categories = [
-    {
-      id: 1,
-      title: "Modern Menswear",
-      count: "245 products",
-      img: "https://images.unsplash.com/photo-1617137968427-85924c800a22?w=400&auto=format&fit=crop&q=80"
-    },
-    {
-      id: 2,
-      title: "Everyday Essentials",
-      count: "189 products",
-      img: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=400&auto=format&fit=crop&q=80"
-    },
-    {
-      id: 3,
-      title: "Beauty Rituals",
-      count: "112 products",
-      img: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&auto=format&fit=crop&q=80"
-    },
-    {
-      id: 4,
-      title: "Travel Gear",
-      count: "327 products",
-      img: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?w=400&auto=format&fit=crop&q=80"
+  const url = "http://127.0.0.1:8000/api/category/";
+
+  // Real database parameters store karne ke liye react state setup
+  const [dbCategories, setDbCategories] = useState([]);
+  const { setGlobalLoading } = useContext(AuthContext);
+
+  const getCategory = async () => {
+    setGlobalLoading(true); // 🔄 Global Full Screen Loader On
+    try {
+      let response = await fetch(url);
+      if (response.ok) {
+        const data = await response.json();
+        setDbCategories(data);
+      }
+    } catch (error) {
+      console.error("Error fetching lookbook categories:", error);
+    } finally {
+      setGlobalLoading(false); // 🏁 Global Full Screen Loader Off
     }
-  ];
+  };
+
+  useEffect(() => {
+    getCategory();
+  }, []);
+
+  // 🎯 FILTER LAYER: Backend payload me se sirf vahi elements filter honge jinka parent === null hai
+  const parentCategories = dbCategories.filter((cat) => cat.parent === null);
 
   return (
     <section className="w-100 py-5 bg-white">
@@ -35,7 +38,7 @@ const LookBack = () => {
         {/* ================= 1. WINTER LOOKBOOK BANNER ROW ================= */}
         <div className="row g-0 rounded-3 gap-2 overflow-hidden mb-5 border shadow-sm">
           {/* Left Side: Creative Image Box */}
-          <div className="col-12 col-md-7 position-relative"  style={{ minHeight: '380px' }}>
+          <div className="col-12 col-md-7 position-relative" style={{ minHeight: '380px' }}>
             <img 
               src="https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=800&auto=format&fit=crop&q=80" 
               alt="Creative designer lookbook" 
@@ -77,55 +80,67 @@ const LookBack = () => {
               </div>
 
               {/* Action Button */}
-              <button className="btn text-white px-4 py-2 fw-medium border-0 d-inline-flex align-items-center gap-2" style={{ backgroundColor: '#0AA586', borderRadius: '5px', fontSize: '14px' }}>
+              <Link to="/category" className="btn text-white px-4 py-2 fw-medium border-0 d-inline-flex align-items-center gap-2 text-decoration-none" style={{ backgroundColor: '#0AA586', borderRadius: '5px', fontSize: '14px' }}>
                 <span>Explore Collection</span> <i className="bi bi-arrow-right"></i>
-              </button>
+              </Link>
             </div>
           </div>
         </div>
 
 
-        {/* ================= 2. FOUR-COLUMN CATEGORY GRID ================= */}
-        <div className="row g-4 row-cols-1 row-cols-sm-2 row-cols-md-4">
-          {categories.map((cat) => (
-            <div className="col" key={cat.id}>
-              <div className="card h-100 border-0 shadow-sm rounded-3 overflow-hidden bg-white">
-                
-                {/* Visual Frame */}
-                <div style={{ height: '260px', overflow: 'hidden' }} className="bg-light">
-                  <img 
-                    src={cat.img} 
-                    alt={cat.title} 
-                    className="w-100 h-100 object-cover"
-                    style={{ objectFit: 'cover', objectPosition: 'top center' }}
-                  />
-                </div>
+        {/* ================= 2. FOUR-COLUMN DYNAMIC CATEGORY GRID ================= */}
+        {/* 🎯 FIXED: Purani local loading conditions ko hata kar safe direct response card loop locked kiya */}
+        {parentCategories.length === 0 ? (
+          <div className="text-center py-4 text-muted small">No parent categories available.</div>
+        ) : (
+          <div className="row g-4 row-cols-1 row-cols-sm-2 row-cols-md-4">
+            {parentCategories.map((cat) => {
+              // FALLBACK IMAGE: Agar django admin panels me 'category_image' field khali hai toh layout safe crash safeguard active rahega
+              const presentationImg = cat.category_image || "https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?w=400";
 
-                {/* Info Text Area */}
-                <div className="p-4 border border-top-0 rounded-bottom-3">
-                  <h5 className="fw-semibold mb-1" style={{ color: '#0F2C59', fontSize: '16px' }}>
-                    {cat.title}
-                  </h5>
-                  <p className="text-muted mb-3" style={{ fontSize: '13px' }}>
-                    {cat.count}
-                  </p>
-                  <a 
-                    href={`#${cat.title.toLowerCase().replace(/\s+/g, '-')}`} 
-                    className="fw-semibold text-decoration-none d-inline-flex align-items-center gap-1"
-                    style={{ color: '#0AA586', fontSize: '13px' }}
-                  >
-                    <span>View All</span> <i className="bi bi-arrow-right" style={{ fontSize: '11px' }}></i>
-                  </a>
-                </div>
+              return (
+                <div className="col" key={cat.id}>
+                  <div className="card h-100 border-0 shadow-sm rounded-3 overflow-hidden bg-white">
+                    
+                    {/* Visual Frame */}
+                    <div style={{ height: '260px', overflow: 'hidden' }} className="bg-light">
+                      <img 
+                        src={presentationImg} 
+                        alt={cat.name} 
+                        className="w-100 h-100 object-cover animate-fade"
+                        style={{ objectFit: 'cover', objectPosition: 'top center' }}
+                      />
+                    </div>
 
-              </div>
-            </div>
-          ))}
-        </div>
+                    {/* Info Text Area */}
+                    <div className="p-4 border border-top-0 rounded-bottom-3">
+                      <h5 className="fw-semibold mb-1 text-truncate" style={{ color: '#0F2C59', fontSize: '16px' }} title={cat.name}>
+                        {cat.name}
+                      </h5>
+                      <p className="text-muted mb-3" style={{ fontSize: '12px', fontStyle: 'italic' }}>
+                        Global Main Department
+                      </p>
+                      
+                      {/* View All dynamic action link redirects user to deep category view grids updates parameters */}
+                      <Link 
+                        to={`/category?id=${cat.id}`} 
+                        className="fw-semibold text-decoration-none d-inline-flex align-items-center gap-1"
+                        style={{ color: '#0AA586', fontSize: '13px' }}
+                      >
+                        <span>View Department</span> <i className="bi bi-arrow-right" style={{ fontSize: '11px' }}></i>
+                      </Link>
+                    </div>
+
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
 
       </div>
     </section>
   );
 }
 
-export default LookBack
+export default LookBack;

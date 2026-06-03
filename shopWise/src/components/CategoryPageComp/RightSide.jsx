@@ -4,7 +4,6 @@ import { AuthContext } from "../../context/AuthContext";
 
 const RightSide = ({search, category, setCategory, brand}) => {
 
-    
     let [productData, setProductData] = useState({ count: 0, results: [] }); 
     const navigate = useNavigate();
     const location = useLocation();
@@ -13,9 +12,11 @@ const RightSide = ({search, category, setCategory, brand}) => {
     const [sort, setSort] = useState("");
     const { wishlistItems, toggleWishlist, addToCart } = useContext(AuthContext);
 
-    
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 12; 
+
+    // 🆕 INDIVIDUAL PRODUCT TIMERS STATE MAPPING PIPELINE
+    const [cardTimers, setCardTimers] = useState({});
 
     const queryParams = new URLSearchParams(location.search);
     const categoryId = queryParams.get("id");
@@ -25,7 +26,6 @@ const RightSide = ({search, category, setCategory, brand}) => {
     let url = "http://127.0.0.1:8000/api/product/";
     let param = [];
 
-    // 🎯 PAGINATION ATTENTION INJECTOR
     param.push(`page=${currentPage}`);
 
     if(search){
@@ -64,7 +64,6 @@ const RightSide = ({search, category, setCategory, brand}) => {
             let response = await fetch(url);
             response = await response.json();
             
-            // Django Paginated payload matrix check bindings logic
             if (response && response.results) {
                 setProductData(response);
             } else if (Array.isArray(response)) {
@@ -81,7 +80,6 @@ const RightSide = ({search, category, setCategory, brand}) => {
         navigate("/productDetails/"+id);
     }
 
-    // Reset target active pagination page index whenever filter parameters mutates natively
     useEffect(() => {
         setCurrentPage(1);
     }, [search, category, location.search, liveSearch, price, sort, brand]);
@@ -90,17 +88,46 @@ const RightSide = ({search, category, setCategory, brand}) => {
         getProduct();
     }, [currentPage, search, category, location.search, liveSearch, price, sort, brand]);
 
-    // 🧠 Dynamic Page calculations matrix helper rules
+    // 🎯 🆕 LIVE TIMER SYNC ENGINE FOR GRID CARDS
+    useEffect(() => {
+        if (!productData.results || productData.results.length === 0) return;
+
+        const interval = setInterval(() => {
+            const now = new Date().getTime();
+            let updatedTimers = {};
+
+            productData.results.forEach((product) => {
+                if (product.active_offer && product.active_offer.is_valid) {
+                    const endTime = new Date(product.active_offer.end_time).getTime();
+                    const difference = endTime - now;
+
+                    if (difference <= 0) {
+                        updatedTimers[product.id] = "Expired";
+                    } else {
+                        const h = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                        const m = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+                        const s = Math.floor((difference % (1000 * 60)) / 1000);
+                        
+                        updatedTimers[product.id] = `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+                    }
+                }
+            });
+
+            setCardTimers(updatedTimers);
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, [productData.results]);
+
     const totalPages = Math.ceil(productData.count / itemsPerPage) || 1;
 
     const handlePageChange = (pageNo) => {
         if (pageNo >= 1 && pageNo <= totalPages) {
             setCurrentPage(pageNo);
-            window.scrollTo({ top: 0, behavior: 'smooth' }); // Smooth scrolls window back to view viewport grids
+            window.scrollTo({ top: 0, behavior: 'smooth' }); 
         }
     };
 
-    // 🆕 PRODUCTION MATH: Dynamic showing ranges logic calculations (e.g. "Showing 1–12 of 45 products")
     const startItem = productData.count === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
     const endItem = Math.min(currentPage * itemsPerPage, productData.count);
   
@@ -310,6 +337,11 @@ const RightSide = ({search, category, setCategory, brand}) => {
                         
                         const isFavorite = wishlistItems?.some(item => item.product === product.id);
 
+                        // 🆕 OFFERS BOUNDARY EVALUATION PARAMETERS
+                        const hasOffer = product.active_offer && product.active_offer.is_valid;
+                        const currentPrice = hasOffer ? product.discounted_price : product.price;
+                        const oldPriceDisplay = hasOffer ? product.price : product.old_price;
+
                         return (
                             <div className="col d-flex" key={product.id}>
                                 <div className="card product-card-wrap w-100 border rounded-3 bg-white shadow-sm overflow-hidden d-flex flex-column position-relative">
@@ -318,10 +350,18 @@ const RightSide = ({search, category, setCategory, brand}) => {
                                         className="position-relative p-3 bg-light text-center d-flex align-items-center justify-content-center overflow-hidden flex-shrink-0"
                                         style={{ height: '240px' }} 
                                     >
-                                    {product.badge_tag && product.badge_tag !== "NONE" && (
+                                    {/* 🎯 🆕 PROMO SPECIAL BADGE SWITCH CONTROLLER */}
+                                    {hasOffer ? (
                                         <span
-                                            className="position-absolute top-0 start-0 m-3 badge rounded-2 px-2 py-1.5 fw-bold z-2"
-                                            style={{ backgroundColor: '#198754', color: '#fff', fontSize: '11px' }}
+                                            className="position-absolute top-0 start-0 m-3 badge rounded-2 px-2 py-1.5 fw-bold z-2 text-white bg-danger animate-pulse"
+                                            style={{ fontSize: '11px' }}
+                                        >
+                                            {product.active_offer.discount_percentage}% OFF
+                                        </span>
+                                    ) : product.badge_tag && product.badge_tag !== "NONE" && (
+                                        <span
+                                            className="position-absolute top-0 start-0 m-3 badge rounded-2 px-2 py-1.5 fw-bold z-2 text-white bg-success"
+                                            style={{ fontSize: '11px' }}
                                         >
                                             {product.badge_tag}
                                         </span>
@@ -331,7 +371,7 @@ const RightSide = ({search, category, setCategory, brand}) => {
                                         src={product.images?.find((img) => img.is_primary)?.image_url || product.images?.[0]?.image_url || "https://placeholder.com/240"}
                                         alt={product.title}
                                         className="w-100 h-100"
-                                        style={{  mixBlendMode: 'multiply' }} 
+                                        style={{ mixBlendMode: 'multiply' }} 
                                     />
 
                                     {/* Hover Interaction Overlay */}
@@ -366,14 +406,25 @@ const RightSide = ({search, category, setCategory, brand}) => {
                                                 {product.category_name}
                                             </span>
 
-                                            <h5
-                                                className="fw-bold mb-2 text-dark product-title-clamp"
-                                                style={{ fontSize: '15px', cursor: 'pointer' }}
-                                                onClick={() => productShowData(product.id)}
-                                                title={product.title}
-                                            >
-                                                {product.title}
-                                            </h5>
+                                            {/* 🎯 🆕 INLINE FLEX CONTAINER: Title ke samne countdown stopwatch clock display logic */}
+                                            <div className="d-flex align-items-center justify-content-between gap-2 mb-2">
+                                                <h5
+                                                    className="fw-bold mb-0 text-dark product-title-clamp flex-grow-1"
+                                                    style={{ fontSize: '15px', display:'flex', alignItems:'center' }}
+                                                    title={product.title}
+                                                >
+                                                    {product.title}
+                                                </h5>
+                                                {hasOffer && cardTimers[product.id] && (
+                                                    <span 
+                                                        className="badge text-danger border border-danger border-opacity-25 bg-danger bg-opacity-10 py-1 px-1.5 text-nowrap rounded d-flex align-items-center gap-1 flex-shrink-0" 
+                                                        style={{ fontSize: '10px', letterSpacing: '0.5px', minWidth: '64px', justifyContent: 'center' }}
+                                                    >
+                                                        <i className="bi bi-clock-history small animate-pulse"></i>
+                                                        {cardTimers[product.id]}
+                                                    </span>
+                                                )}
+                                            </div>
 
                                             {/* Rating Framework Slot */}
                                             <div
@@ -391,12 +442,13 @@ const RightSide = ({search, category, setCategory, brand}) => {
 
                                         <div className="d-flex align-items-center justify-content-between pt-2 border-top mt-auto">
                                             <div className="d-flex flex-column">
-                                                <span className="fw-bold fs-5 text-dark lh-sm">
-                                                    ${product.price}
+                                                {/* Price rendering changes based on dynamic discounts */}
+                                                <span className={`fw-bold fs-5 lh-sm ${hasOffer ? 'text-danger' : 'text-dark'}`}>
+                                                    ${currentPrice}
                                                 </span>
-                                                {product.old_price && (
+                                                {oldPriceDisplay && (
                                                     <span className="text-muted text-decoration-line-through x-small" style={{ fontSize: '12px' }}>
-                                                        ${product.old_price}
+                                                        ${oldPriceDisplay}
                                                     </span>
                                                 )}
                                             </div>
@@ -421,7 +473,6 @@ const RightSide = ({search, category, setCategory, brand}) => {
             {/* 🎯 PAGINATION COMPONENT SYNC INTERFACE BLOCK */}
             {productData.results?.length > 0 && (
                 <div className="card border-0 p-3 rounded-3 bg-white shadow-sm border d-flex flex-wrap flex-sm-nowrap justify-content-between align-items-center gap-3">
-                    {/* 🆕 UPDATED: Real dynamic counting ranges string label inject */}
                     <span className="text-muted fw-medium style-text-results" style={{ fontSize: '14px' }}>
                         Showing <strong className="text-dark fw-bold">{startItem}–{endItem}</strong> of <strong className="text-dark fw-bold">{productData.count}</strong> products
                     </span>
@@ -429,7 +480,6 @@ const RightSide = ({search, category, setCategory, brand}) => {
                     <div className="d-flex align-items-center gap-3 flex-wrap">
                         <nav aria-label="Product navigation page items">
                         <ul className="pagination pagination-sm mb-0 align-items-center gap-1">
-                            {/* Previous Button Handler */}
                             <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`} style={{ cursor: "pointer" }}>
                                 <span className="page-link border rounded-2 px-2.5 py-1.5" onClick={() => handlePageChange(currentPage - 1)}>
                                     <i className="bi bi-arrow-left"></i>
@@ -452,7 +502,6 @@ const RightSide = ({search, category, setCategory, brand}) => {
                                 );
                             })}
 
-                            {/* Next Button Handler */}
                             <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`} style={{ cursor: "pointer" }}>
                                 <span className="page-link border rounded-2 px-2.5 py-1.5" onClick={() => handlePageChange(currentPage + 1)}>
                                     <i className="bi bi-arrow-right"></i>

@@ -8,7 +8,7 @@ const ProductDetails = () => {
   const productUrl = "http://127.0.0.1:8000/api/product/" + id + "/";
   const reviewsUrl = `http://127.0.0.1:8000/api/reviews/?product_id=${id}`;
 
-  const { wishlistItems, toggleWishlist, userProfile, addToCart } = useContext(AuthContext);
+  const { wishlistItems, toggleWishlist, userProfile, addToCart, setGlobalLoading } = useContext(AuthContext);
 
   let [product, setProduct] = useState();
   const [activeImage, setActiveImage] = useState("");
@@ -18,34 +18,41 @@ const ProductDetails = () => {
   const [ratingStart, setRatingStart] = useState("5.0");
   const [quantity, setQuantity] = useState(1);
 
-  // 🆕 VARIANT MANAGEMENT STATES
+  // VARIANT MANAGEMENT STATES
   const [selectedColor, setSelectedColor] = useState(null); 
   const [selectedSize, setSelectedSize] = useState(null);   
   const [currentVariant, setCurrentVariant] = useState(null);
 
+  // 🆕 DYNAMIC LOCAL TIMER OVERLAY OBJECT STATE
+  const [detailTimer, setDetailTimer] = useState("00:00:00");
+
   // 📦 1. Core Product Details Extraction
   const getProductDetails = async () => {
-    let response = await fetch(productUrl);
-    response = await response.json();
+    setGlobalLoading(true); // 🔄 Global dynamic glass filter loader on
+    try {
+      let response = await fetch(productUrl);
+      response = await response.json();
 
-    setProduct(response);
+      setProduct(response);
 
-    // Initial default layout image selection logic
-    const primaryImgObj = response?.images?.find((img) => img.is_primary);
-    const fallbackImgUrl = response?.images?.[0]?.image_url || response?.images?.[0]?.image;
-    const finalUrl = primaryImgObj?.image_url || primaryImgObj?.image || fallbackImgUrl;
+      const primaryImgObj = response?.images?.find((img) => img.is_primary);
+      const fallbackImgUrl = response?.images?.[0]?.image_url || response?.images?.[0]?.image;
+      const finalUrl = primaryImgObj?.image_url || primaryImgObj?.image || fallbackImgUrl;
 
-    if (finalUrl) {
-      setActiveImage(finalUrl);
-    }
+      if (finalUrl) {
+        setActiveImage(finalUrl);
+      }
 
-    // 🎯 INITIAL VARIANT STATE SETTING
-    // Page load hote hi agar koi defaults variants betha hai toh automatically standard option trigger kar do
-    if (response?.variants && response.variants.length > 0) {
-      const firstVariant = response.variants[0];
-      if (firstVariant.color_details) setSelectedColor(firstVariant.color_details);
-      if (firstVariant.size_details) setSelectedSize(firstVariant.size_details);
-      setCurrentVariant(firstVariant);
+      if (response?.variants && response.variants.length > 0) {
+        const firstVariant = response.variants[0];
+        if (firstVariant.color_details) setSelectedColor(firstVariant.color_details);
+        if (firstVariant.size_details) setSelectedSize(firstVariant.size_details);
+        setCurrentVariant(firstVariant);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setGlobalLoading(false); // 🏁 Loader stopped safely
     }
   };
 
@@ -62,10 +69,9 @@ const ProductDetails = () => {
     }
   };
 
-  // 🧠 VARIANT LIVE MATRIX COMBINATION MATCHER LOGIC EFFECT
+  // VARIANT LIVE MATRIX COMBINATION MATCHER LOGIC EFFECT
   useEffect(() => {
     if (product?.variants) {
-      // Color and Size states filter rule checks logic block
       const matched = product.variants.find((v) => {
         const colorMatch = !selectedColor || v.color_details?.id === selectedColor.id;
         const sizeMatch = !selectedSize || v.size_details?.id === selectedSize.id;
@@ -89,6 +95,7 @@ const ProductDetails = () => {
       return;
     }
 
+    setGlobalLoading(true);
     try {
       const response = await fetch("http://127.0.0.1:8000/api/reviews/", {
         method: "POST",
@@ -107,13 +114,15 @@ const ProductDetails = () => {
         toast.success("Review posted successfully! ⭐");
         setReviewText(""); 
         setRatingStart("5.0"); 
-        getProductReviews(); 
+        await getProductReviews(); 
       } else {
         toast.error("Something went wrong while posting your review.");
       }
     } catch (error) {
       console.error(error);
       toast.error("Server connection failed.");
+    } finally {
+      setGlobalLoading(false);
     }
   };
 
@@ -122,10 +131,38 @@ const ProductDetails = () => {
     getProductReviews(); 
   }, [id]);
 
+  // 🎯 🆕 LIVE BACKEND TICKING ENGINE FOR SINGLE PRODUCT DISCOUNT TIMES
+  useEffect(() => {
+    if (!product?.active_offer || !product?.active_offer?.is_valid) return;
+
+    const targetEndTime = new Date(product.active_offer.end_time).getTime();
+
+    const ticker = setInterval(() => {
+      const now = new Date().getTime();
+      const diff = targetEndTime - now;
+
+      if (diff <= 0) {
+        clearInterval(ticker);
+        setDetailTimer("Expired");
+        getProductDetails(); // Auto re-sync details block once countdown ticks off
+      } else {
+        const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const s = Math.floor((diff % (1000 * 60)) / 1000);
+
+        const daysStr = d > 0 ? `${d}d ` : "";
+        setDetailTimer(`${daysStr}${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")} left`);
+      }
+    }, 1000);
+
+    return () => clearInterval(ticker);
+  }, [product]);
+
   const [activeTab, setActiveTab] = useState("description");
   const isFavorite = wishlistItems?.some(item => item.product === product?.id);
 
-  // 🧠 EXTRACTING UNIQUE AVAILABLE COLORS & SIZES FOR THE SELECTION UI
+  // EXTRACTING UNIQUE AVAILABLE COLORS & SIZES FOR THE SELECTION UI
   const availableVariants = product?.variants || [];
   
   const uniqueColors = Array.from(
@@ -136,10 +173,24 @@ const ProductDetails = () => {
     new Map(availableVariants.filter(v => v.size_details).map(v => [v.size_details.id, v.size_details])).values()
   );
 
-  // 💰 LIVE PRICING CALCULATION PARSER
-  // Agar product variant selected hai aur uski apni customized override price hai toh wo dikhao, warna base product price
-  const displayPrice = currentVariant?.variant_price ? currentVariant.variant_price : product?.price;
+  // 🧠 🆕 METADATA INTERFACE SWAPPER LOGIC FOR SPECIAL SALE PRICES
+  const hasOffer = product?.active_offer && product?.active_offer?.is_valid;
+  
+  // Base core calculations math
+  const originalBasePrice = currentVariant?.variant_price ? currentVariant.variant_price : product?.price;
+  
+  const finalCalculatedPrice = hasOffer 
+    ? (currentVariant?.variant_price 
+        ? roundPrice(currentVariant.variant_price - (currentVariant.variant_price * product.active_offer.discount_percentage / 100))
+        : product.discounted_price)
+    : originalBasePrice;
+
+  const displayOldPrice = hasOffer ? originalBasePrice : product?.old_price;
   const displayStock = currentVariant ? currentVariant.variant_stock : product?.stock_quantity;
+
+  function roundPrice(num) {
+    return Math.round((num + Number.EPSILON) * 100) / 100;
+  }
 
   return (
     <>
@@ -165,8 +216,13 @@ const ProductDetails = () => {
             {/* LEFT ROW: Gallery Multi-Image Panel */}
             <div className="col-12 col-lg-6">
               <div className="card border rounded-3 overflow-hidden bg-light position-relative p-4 text-center d-flex align-items-center justify-content-center" style={{ minHeight: "480px" }}>
-                {product?.badge_tag && product.badge_tag !== 'NONE' && (
-                  <span className="position-absolute top-0 start-0 m-3 badge rounded-2 px-3 py-2 fw-bold text-white bg-danger" style={{ fontSize: "12px" }}>
+                {/* 🎯 PROMO SPECIAL PERCENTAGE BADGES TOGGLE */}
+                {hasOffer ? (
+                  <span className="position-absolute top-0 start-0 m-3 badge rounded-2 px-3 py-2 fw-bold text-white bg-danger animate-pulse" style={{ fontSize: "13px", zIndex: 10 }}>
+                    {product.active_offer.discount_percentage}% OFF
+                  </span>
+                ) : product?.badge_tag && product.badge_tag !== 'NONE' && (
+                  <span className="position-absolute top-0 start-0 m-3 badge rounded-2 px-3 py-2 fw-bold text-white bg-danger" style={{ fontSize: "12px", zIndex: 10 }}>
                     {product.badge_tag}
                   </span>
                 )}
@@ -225,7 +281,7 @@ const ProductDetails = () => {
                 </h1>
 
                 {/* Rating Layer */}
-                <div className="d-flex align-items-center gap-2 mb-4">
+                <div className="d-flex align-items-center gap-2 mb-3">
                   <div className="text-warning small d-flex gap-0.5">
                     {Array.from({ length: 5 }).map((_, i) => (
                       <i key={i} className="bi bi-star-fill"></i>
@@ -236,21 +292,34 @@ const ProductDetails = () => {
                   <span className="text-danger small fw-bold border-start ps-2">{displayStock} quantities remaining</span>
                 </div>
 
+                {/* OFFER COUNTDOWN TIMING ROW STRIP BANNER */}
+                {hasOffer && (
+                  <div className="w-100 rounded-3 p-2 mb-3 d-flex align-items-center gap-5 border border-danger border-opacity-25" style={{ background: "linear-gradient(90deg, #fff3f3 0%, #ffebeb 100%)" }}>
+                    <span className="badge bg-danger text-white px-2 py-1 fw-bold text-uppercase d-flex align-items-center gap-1" style={{ fontSize: '11px' }}>
+                      <i className="bi bi-lightning-fill"></i> {product.active_offer.title}
+                    </span>
+                    <span className="text-dark small fw-bold d-flex align-items-center gap-1" style={{ fontSize: '13px' }}>
+                      Ends In: <strong className="text-danger font-monospace fs-6 ms-0.5">{detailTimer}</strong>
+                    </span>
+                  </div>
+                )}
+
                 {/* Pricing Block Card */}
                 <div className="card border-0 rounded-3 p-3 mb-4 d-flex align-items-center justify-content-between flex-row flex-wrap gap-3" style={{ backgroundColor: "#F8FAFC" }}>
                   <div className="d-flex align-items-baseline gap-2">
-                    <span className="fw-extrabold text-dark h2 mb-0" style={{ color: "#0F2C59" }}>
-                      ${displayPrice}
+                    {/* Switch layout styling based on active deal rules */}
+                    <span className={`fw-extrabold h2 mb-0 ${hasOffer ? 'text-danger' : 'text-dark'}`} style={{ color: hasOffer ? "#dc3545" : "#0F2C59" }}>
+                      ${finalCalculatedPrice}
                     </span>
-                    {product?.old_price && (
+                    {displayOldPrice && (
                       <span className="text-muted text-decoration-line-through text-md">
-                        ${product?.old_price}
+                        ${displayOldPrice}
                       </span>
                     )}
                   </div>
-                  {product?.old_price && (
+                  {displayOldPrice && (
                     <span className="badge border px-2.5 py-1.5 text-success fw-bold font-normal" style={{ backgroundColor: "#E2F2EE", borderColor: "#C6E7E1", fontSize: "12px" }}>
-                      Save ${parseFloat(product.old_price - displayPrice).toFixed(2)}
+                      Save ${parseFloat(displayOldPrice - finalCalculatedPrice).toFixed(2)}
                     </span>
                   )}    
                 </div>
@@ -334,10 +403,10 @@ const ProductDetails = () => {
                   </div>
                   <div className="col-8 col-sm-7">
                     <button 
-                      className="btn w-100 text-white fw-bold border-0 d-flex align-items-center justify-content-center gap-2 shadow-sm" 
+                      className="btn btn-success w-100 text-white fw-bold border-0 d-flex align-items-center justify-content-center gap-2 shadow-sm" 
                       style={{ backgroundColor: "#0AA586", height: "44px", borderRadius: "6px" }}
                       onClick={() => product && addToCart(product.id, quantity)}
-                      disabled={displayStock <= 0} // Out of stock status check
+                      disabled={displayStock <= 0} 
                     >
                       <i className="bi bi-bag-plus"></i> {displayStock > 0 ? "Add to Cart" : "Out of Stock"}
                     </button>
@@ -405,7 +474,7 @@ const ProductDetails = () => {
           <div className="container px-md-5 py-2">
             <div className="row g-4">
               
-              {/* 🟢 LEFT FORM COLUMN */}
+              {/* LEFT FORM COLUMN */}
               <div className="col-12 col-md-5">
                 {userProfile ? (
                   <div className="card p-4 border border-light shadow-sm rounded-3 bg-white">
@@ -452,7 +521,7 @@ const ProductDetails = () => {
                 )}
               </div>
 
-              {/* 🔵 RIGHT LIST COLUMN */}
+              {/* RIGHT LIST COLUMN */}
               <div className="col-12 col-md-7">
                 <h3 className="fw-bold mb-4 text-dark" style={{ color: "#0F2C59" }}>
                   Product Reviews ({reviews.length})

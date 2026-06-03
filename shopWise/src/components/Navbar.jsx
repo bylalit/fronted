@@ -17,19 +17,23 @@ const Navbar = ({ setSearch }) => {
   const cartRef = useRef(null);
   const [input, setInput] = useState("");
 
-  // 🎯 FIX 1: Search trigger hote hi screen par smooth glass loader active ho jayega
+  
   const searchProduct = async () => {
     if (!input.trim()) return;
     
-    setGlobalLoading(true); // 🔄 Search backend processing animation trigger
+    setGlobalLoading(true); 
     setSearch(input);
     navigate("/category");
     
-    // Thoda sa micro-delay taaki routing smoothly resolve ho jaye
+    
     setTimeout(() => {
       setGlobalLoading(false);
     }, 400);
   };
+
+    const productShowData = (id) => {
+        navigate("/productDetails/"+id);
+    }
 
   // Keyboard 'Enter' key press detect handler helper for search inputs
   const handleKeyDown = (e) => {
@@ -265,7 +269,11 @@ const Navbar = ({ setSearch }) => {
 
                             return (
                               <div key={item.id} className="d-flex gap-2.5 align-items-center border-bottom pb-2.5">
-                                <div className="border rounded bg-light p-1 d-flex align-items-center justify-content-center text-center" style={{ width: "55px", height: "55px" }}>
+                                <div 
+                                    className="border rounded bg-light p-1 me-2 my-2 d-flex align-items-center justify-content-center text-center" 
+                                    style={{ width: "55px", height: "55px", cursor:"pointer" }}
+                                    onClick={() => productShowData(product.id)}    
+                                >
                                   <img src={primaryImg} alt={product.title} className="img-fluid object-contain" style={{ maxHeight: "45px", mixBlendMode: "multiply" }} />
                                 </div>
                                 <div className="flex-grow-1 min-w-0" style={{ fontSize: "13px" }}>
@@ -282,12 +290,12 @@ const Navbar = ({ setSearch }) => {
                                     <span className="text-muted x-small">x{item.quantity}</span>
                                   </div>
                                 </div>
-                                {/* 🗑️ LIVE REMOVE ACTION ON HOVER DROPDOWN WITH TOGGLE FIX */}
+                                {/* LIVE REMOVE ACTION ON HOVER DROPDOWN WITH TOGGLE FIX */}
                                 <button 
                                   type="button"
                                   onClick={async () => {
                                     await removeFromCart(product.id);
-                                    setShowCartDropdown(false); // 🎯 FIX 2: Delete karte hi drop box safely close ho jayega
+                                    setShowCartDropdown(false); 
                                   }} 
                                   className="btn p-0 border-0 text-muted opacity-50 hover-danger ms-1"
                                 >

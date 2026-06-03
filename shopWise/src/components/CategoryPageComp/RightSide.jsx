@@ -331,7 +331,7 @@ const RightSide = ({search, category, setCategory, brand}) => {
                                         src={product.images?.find((img) => img.is_primary)?.image_url || product.images?.[0]?.image_url || "https://placeholder.com/240"}
                                         alt={product.title}
                                         className="w-100 h-100"
-                                        style={{ objectFit: 'contain', mixBlendMode: 'multiply' }} 
+                                        style={{  mixBlendMode: 'multiply' }} 
                                     />
 
                                     {/* Hover Interaction Overlay */}

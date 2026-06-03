@@ -1,6 +1,7 @@
 import { useContext, useEffect, useState } from 'react';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import { AuthContext } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const Cart = () => {
   // 🎯 Context controls ko call kiya
@@ -8,6 +9,12 @@ const Cart = () => {
 
   // Shipping Selection State
   const [shippingCost, setShippingCost] = useState(4.99);
+
+  const navigate = useNavigate()
+
+  const productShowData = (id) => {
+    navigate("/productDetails/"+id);
+  }
 
   useEffect(() => {
     getCart(); // Page mount par real data pull hoga
@@ -85,7 +92,11 @@ const Cart = () => {
                             {/* Thumbnail + Title Frame */}
                             <td className="py-4 ps-3">
                               <div className="d-flex align-items-center gap-3">
-                                <div className="border rounded-2 p-2 bg-light text-center d-flex align-items-center justify-content-center" style={{ width: '80px', height: '80px' }}>
+                                <div 
+                                  className="border rounded-2 p-2 bg-light text-center d-flex align-items-center justify-content-center" 
+                                  style={{ width: '80px', height: '80px', cursor:'pointer' }}
+                                  onClick={() => productShowData(product.id)}
+                                >
                                   <img src={primaryImg} alt={product.title} className="img-fluid object-contain" style={{ maxHeight: '64px', mixBlendMode: 'multiply' }} />
                                 </div>
                                 <div style={{ maxWidth: "260px" }}>

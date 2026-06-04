@@ -1,0 +1,422 @@
+import { useContext, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom"; 
+import { AuthContext } from "../context/AuthContext";
+
+const SaleProduct = () => {
+    // 🎯 PAGINATED RESPONSE OBJECT MATRIX BINDING
+    let [productData, setProductData] = useState({ count: 0, results: [] }); 
+    const navigate = useNavigate();
+
+    // FILTER LOCAL STATES MATCHED FROM RIGHTSIDE TEMPLATE
+    const [liveSearch, setLiveSearch] = useState("");
+    const [price, setPrice] = useState("");
+    const [sort, setSort] = useState("");
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 12; 
+
+    // INDIVIDUAL CARD COUNTDOWN RUNNING TIMERS STATE
+    const [cardTimers, setCardTimers] = useState({});
+
+    // Context api values controllers
+    const { setGlobalLoading, wishlistItems, toggleWishlist, addToCart } = useContext(AuthContext);
+      
+    // 🧠 CORE SEPARATE SALE CONTEXT QUERY AGGREGATION PIPELINE
+    let url = "http://127.0.0.1:8000/api/product/";
+    let param = [];
+
+    param.push(`page=${currentPage}`);
+
+    if(liveSearch.length > 0){
+        param.push(`search=${liveSearch}`)
+    }
+
+    if(price){
+        param.push(`price=${price}`)
+    }
+
+    if(sort){
+        param.push(`sort=${sort}`)
+    }
+
+    if(param.length > 0){
+        url += "?" + param.join("&");
+    }
+
+    // const getSaleProducts = async () => {
+    //     setGlobalLoading(true);
+    //     try {
+    //         let response = await fetch(url);
+    //         if (response.ok) {
+    //             const data = await response.json();
+                
+    //             // DRF schema layout checks arrays safety mapping
+    //             let allProducts = data.results || data;
+    //             let totalCount = data.count || allProducts.length;
+
+    //             // 🎯 STRICT PIPELINE FILTER: Sirf active discount deal objects hi page par filter honge
+    //             let activeDeals = allProducts.filter(
+    //                 (product) => product.active_offer && product.active_offer.is_valid
+    //             );
+
+    //             setProductData({
+    //                 count: activeDeals.length === allProducts.length ? totalCount : activeDeals.length, 
+    //                 results: activeDeals
+    //             });
+    //         }
+    //     } catch (error) {
+    //         console.error("Error loading centralized sale products context loops:", error);
+    //     } finally {
+    //         setGlobalLoading(false);
+    //     }
+    // };
+
+    const getSaleProducts = async () => {
+        setGlobalLoading(true);
+        try {
+            // 🆕 URL pipeline me direct on_sale=true append kar diya
+            let saleUrl = url + (url.includes("?") ? "&" : "?") + "on_sale=true";
+            
+            let response = await fetch(saleUrl);
+            if (response.ok) {
+                const data = await response.json();
+                
+                // Ab backend direct paginated object bhejega jisme count aur accurate page-wise data hoga
+                setProductData({
+                    count: data.count || (Array.isArray(data) ? data.length : 0),
+                    results: data.results || data
+                });
+            }
+        } catch (error) {
+            console.error("Error loading flash sale products:", error);
+        } finally {
+            setGlobalLoading(false);
+        }
+    };
+
+    const productShowData = (id) => {
+        navigate("/productDetails/" + id);
+    };
+
+    // Reset pagination page whenever criteria adjustments change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [liveSearch, price, sort]);
+
+    useEffect(() => {
+        getSaleProducts();
+    }, [currentPage, liveSearch, price, sort]);
+
+    // 🎯 REAL-TIME TICKER EFFECT FOR SALE PRODUCT DISCOUNTS
+    useEffect(() => {
+        if (!productData.results || productData.results.length === 0) return;
+
+        const interval = setInterval(() => {
+            const now = new Date().getTime();
+            let updatedTimers = {};
+
+            productData.results.forEach((product) => {
+                if (product.active_offer && product.active_offer.is_valid) {
+                    const endTime = new Date(product.active_offer.end_time).getTime();
+                    const difference = endTime - now;
+
+                    if (difference <= 0) {
+                        updatedTimers[product.id] = "Expired";
+                    } else {
+                        const h = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                        const m = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+                        const s = Math.floor((difference % (1000 * 60)) / 1000);
+                        
+                        updatedTimers[product.id] = `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+                    }
+                }
+            });
+
+            setCardTimers(updatedTimers);
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, [productData.results]);
+
+    // Pagination calculations math
+    const totalPages = Math.ceil(productData.count / itemsPerPage) || 1;
+
+    const handlePageChange = (pageNo) => {
+        if (pageNo >= 1 && pageNo <= totalPages) {
+            setCurrentPage(pageNo);
+            window.scrollTo({ top: 0, behavior: 'smooth' }); 
+        }
+    };
+
+    const startItem = productData.count === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
+    const endItem = Math.min(currentPage * itemsPerPage, productData.count);
+
+  return (
+    <>
+        {/* Dynamic CSS Injection for Hover Effects & Layout Refinements MATCHED EXACT FROM RIGHTSIDE */}
+        <style>{`
+            .product-card-wrap .hover-actions {
+                opacity: 0;
+                transition: all 0.3s ease-in-out;
+                transform: translateY(10px);
+            }
+            .product-card-wrap:hover .hover-actions {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            .action-icon-btn {
+                width: 40px;
+                height: 40px;
+                background-color: white;
+                color: #333;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                text-decoration: none;
+                box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+                transition: all 0.2s;
+            }
+            .action-icon-btn:hover {
+                background-color: #0AA586;
+                color: white !important;
+            }
+            .product-title-clamp {
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+                height: 48px;
+                line-height: 24px;
+            }
+        `}</style>
+
+        {/* FULL SIDEBARLESS CENTRAL CONTAINER WRAPPER */}
+        <div className="container py-5">
+            
+            {/* Title Section */}
+            <div className="mb-4">
+                <h2 className="fw-extrabold text-dark d-flex align-items-center gap-2" style={{ color: "#0F2C59" }}>
+                    <i className="bi bi-lightning-charge-fill text-danger"></i> Hot Flash Sales Hub
+                </h2>
+                <p className="text-muted small">Explore limited-time premium markdown pricing directly curated for you.</p>
+            </div>
+
+            {/* Top Toolbar Utilities Panel */}
+            <div className="card border-0 p-3 rounded-3 mb-4 bg-white shadow-sm border">
+                <div className="row g-3 align-items-center justify-content-between">
+                    
+                    {/* Search Input */}
+                    <div className="col-12 col-md-5">
+                    <div className="input-group border rounded-2 bg-light p-1">
+                        <span className="input-group-text bg-transparent border-0 text-muted"><i className="bi bi-search"></i></span>
+                        <input 
+                            type="text" 
+                            className="form-control bg-transparent border-0 shadow-none ps-1 fw-medium" placeholder="Search markdown offers..." 
+                            style={{ fontSize: '14px' }}
+                            onChange={(e) => setLiveSearch(e.target.value)} 
+                        />
+                    </div>
+                    </div>
+
+                    {/* Grid Layout Metric indicators */}
+                    <div className="col-auto d-flex align-items-center gap-3">
+                    <span className="text-muted small fw-bold">VIEW</span>
+                    <div className="btn-group border rounded-2" style={{ overflow: 'hidden' }}>
+                        <button className="btn btn-success btn-sm px-2.5 py-1.5 border-0" style={{ backgroundColor: '#0AA586' }}><i className="bi bi-grid-3x3-gap-fill text-white"></i></button>
+                    </div>
+                    </div>
+
+                </div>
+
+                {/* Filters Option Dropdowns */}
+                <div className="row g-2 mt-3 pt-2 border-top align-items-end">
+                    <div className="col-6 col-md-4">
+                        <label className="text-dark fw-bold small mb-1.5" style={{ fontSize: '13px' }}>Price Range</label>
+                        <select 
+                            className="form-select border shadow-none bg-light fw-semibold text-secondary" 
+                            style={{ fontSize: '14px', padding: '8px' }}
+                            value={price}
+                            onChange={(e) => setPrice(e.target.value)}
+                        >
+                            <option value="">All Sale Prices</option>
+                            <option value="0-800">₹0 - ₹800</option>
+                            <option value="800-5000">₹800 - ₹5000</option>
+                            <option value="5000-10000">₹5000 - ₹10000</option>
+                        </select>
+                    </div>
+                    <div className="col-6 col-md-4">
+                        <label className="text-dark fw-bold small mb-1.5" style={{ fontSize: '13px' }}>Sort By</label>
+                        <select 
+                            className="form-select border shadow-none bg-light fw-semibold text-secondary" 
+                            style={{ fontSize: '14px', padding: '8px' }}
+                            value={sort}
+                            onChange={(e) => setSort(e.target.value)}
+                        >
+                            <option value="">Featured Deals</option>
+                            <option value="low">Price Low to High</option>
+                            <option value="high">Price High to Low</option>
+                            <option value="new">Newest Marked Deals</option>
+                        </select>
+                    </div>
+                    <div className="col-12 col-md-4">
+                        <button 
+                            className="btn btn-light border w-100 d-flex align-items-center justify-content-center gap-1.5 text-secondary fw-semibold" 
+                            style={{ fontSize: '14px', padding: '9px' }}
+                            onClick={() => {
+                                setPrice("");
+                                setSort("");
+                                setLiveSearch("");
+                            }}
+                        >
+                            <i className="bi bi-arrow-counterclockwise"></i> Clear Filters
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {/* Active Filter Badges */}   
+            {
+                (price || sort || liveSearch) && (
+                    <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4 px-1">
+                        <div className="d-flex flex-wrap align-items-center gap-2" style={{ fontSize: '14px' }}>
+                            <span className="text-muted fw-bold">Active filters:</span>
+                            {price && (
+                                <span className="badge border rounded-pill px-3 py-2 d-flex align-items-center gap-2 fw-semibold" style={{ backgroundColor: '#E2F2EE', borderColor: '#C6E7E1', color: '#0AA586' }}>
+                                    Price : {price}
+                                    <i className="bi bi-x fs-6" style={{cursor: "pointer"}} onClick={() => setPrice("")}></i>
+                                </span>
+                            )}
+                            {sort && (
+                                <span className="badge border rounded-pill px-3 py-2 d-flex align-items-center gap-2 fw-semibold" style={{ backgroundColor: '#E2F2EE', borderColor: '#C6E7E1', color: '#0AA586' }}>
+                                    Sort : {sort}
+                                    <i className="bi bi-x fs-6" style={{cursor: "pointer"}} onClick={() => setSort("")}></i>
+                                </span>
+                            )}
+                            {liveSearch && (
+                                <span className="badge border rounded-pill px-3 py-2 d-flex align-items-center gap-2 fw-semibold" style={{ backgroundColor: '#E2F2EE', borderColor: '#C6E7E1', color: '#0AA586' }}>
+                                    Search : {liveSearch}
+                                    <i className="bi bi-x fs-6" style={{cursor: "pointer"}} onClick={() => setLiveSearch("")}></i>
+                                </span>
+                            )}
+                        </div>
+                    </div>
+                )
+            }
+            
+
+            {/* Products Cards Layout Matrix Grid (4 Column Responsive Framework Layout Setup) */}
+            {productData.results?.length === 0 ? (
+                <div className="text-center py-5 border border-dashed rounded bg-white text-muted my-3 shadow-sm">
+                    <i className="bi bi-tags display-1 text-muted opacity-50"></i>
+                    <h5 className="mt-3 fw-bold">No Marked Deals Available!</h5>
+                    <p className="small text-secondary">Kripya baad me check karein ya filters reset kijiye.</p>
+                </div>
+            ) : (
+                <div className="row g-4 row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 mb-5">
+                {productData.results?.map((product) => {
+                        const isFavorite = wishlistItems?.some(item => item.product === product.id);
+                        const hasOffer = product.active_offer && product.active_offer.is_valid;
+
+                        return (
+                            <div className="col d-flex" key={product.id}>
+                                <div className="card product-card-wrap w-100 border rounded-3 bg-white shadow-sm overflow-hidden d-flex flex-column position-relative">
+                                    
+                                    <div className="position-relative p-3 bg-light text-center d-flex align-items-center justify-content-center overflow-hidden flex-shrink-0" style={{ height: '240px' }}>
+                                        {hasOffer && (
+                                            <span className="position-absolute top-0 start-0 m-3 badge rounded-2 px-2 py-1.5 fw-bold z-2 text-white bg-danger" style={{ fontSize: '11px' }}>
+                                                {product.active_offer.discount_percentage}% OFF
+                                            </span>
+                                        )}
+
+                                        <img src={product.images?.find((img) => img.is_primary)?.image_url || product.images?.[0]?.image_url || "https://placeholder.com/240"} alt={product.title} className="w-100 h-100" style={{ objectFit: 'contain', mixBlendMode: 'multiply' }} />
+
+                                        {/* Hover Interaction Overlay */}
+                                        <div className="hover-actions position-absolute w-100 h-100 top-0 start-0 d-flex align-items-center justify-content-center gap-2 z-1" style={{ backgroundColor: 'rgba(15, 44, 89, 0.2)' }}>
+                                            <button type="button" onClick={() => toggleWishlist(product.id)} className="action-icon-btn border-0" title={isFavorite ? "Remove from Wishlist" : "Add to Wishlist"}>
+                                                <i className={`bi bi-heart-fill ${isFavorite ? 'text-danger' : 'text-muted'}`}></i>
+                                            </button>
+                                            <button type="button" onClick={() => productShowData(product.id)} className="action-icon-btn border-0" title="Quick View">
+                                                <i className="bi bi-eye-fill"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div className="p-3 d-flex flex-column flex-grow-1 justify-content-between">
+                                        <div className="mb-3">
+                                            <span className="text-muted fw-bold d-block mb-1 text-uppercase" style={{ fontSize: '11px', letterSpacing: '0.5px' }}>{product.category_name}</span>
+
+                                            {/* TITLE & COUNTDOWN CLOCK ROW BLOCK */}
+                                            <div className="d-flex align-items-center justify-content-between gap-2 mb-2">
+                                                <h5 className="fw-bold mb-0 text-dark product-title-clamp flex-grow-1" style={{ fontSize: '14px', cursor: 'pointer' }} onClick={() => productShowData(product.id)} title={product.title}>{product.title}</h5>
+                                                {hasOffer && cardTimers[product.id] && (
+                                                    <span className="badge text-danger border border-danger border-opacity-25 bg-danger bg-opacity-10 py-1 px-1.5 text-nowrap rounded d-flex align-items-center gap-1 flex-shrink-0" style={{ fontSize: '10px', minWidth: '64px', justifyContent: 'center' }}>
+                                                        <i className="bi bi-clock-history small animate-pulse"></i>
+                                                        {cardTimers[product.id]}
+                                                    </span>
+                                                )}
+                                            </div>
+
+                                            <div className="text-warning small d-flex align-items-center gap-1" style={{ fontSize: '12px' }}>
+                                                <i className="bi bi-star-fill"></i>
+                                                <i className="bi bi-star-fill"></i>
+                                                <i className="bi bi-star-fill"></i>
+                                                <i className="bi bi-star-fill"></i>
+                                                <i className="bi bi-star-fill text-black-50 opacity-25"></i>
+                                                <span className="text-muted ms-1 fw-medium">(5.0)</span>
+                                            </div>
+                                        </div>
+
+                                        <div className="d-flex align-items-center justify-content-between pt-2 border-top mt-auto">
+                                            <div className="d-flex flex-column">
+                                                <span className="fw-bold fs-5 lh-sm text-danger">${hasOffer ? product.discounted_price : product.price}</span>
+                                                {hasOffer && (
+                                                    <span className="text-muted text-decoration-line-through x-small" style={{ fontSize: '12px' }}>${product.price}</span>
+                                                )}
+                                            </div>
+                                            <button type="button" className="btn text-white fw-bold border-0 shadow-sm" style={{ backgroundColor: '#0AA586', borderRadius: '5px', fontSize: '12px', padding: '8px 12px', whiteSpace: 'nowrap' }} onClick={() => addToCart(product.id, 1)}>Add to Cart</button>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                        );
+                })}
+                </div>
+            )}
+
+            {/* PAGINATION INTERFACE FRAMEWORK FOOTER */}
+            {productData.results?.length > 0 && (
+                <div className="card border-0 p-3 rounded-3 bg-white shadow-sm border d-flex flex-wrap flex-sm-nowrap justify-content-between align-items-center gap-3">
+                    <span className="text-muted fw-medium style-text-results" style={{ fontSize: '14px' }}>
+                        Showing <strong className="text-dark fw-bold">{startItem}–{endItem}</strong> of <strong className="text-dark fw-bold">{productData.count}</strong> sale items
+                    </span>
+                
+                    <div className="d-flex align-items-center gap-3 flex-wrap">
+                        <nav aria-label="Product navigation page items">
+                        <ul className="pagination pagination-sm mb-0 align-items-center gap-1">
+                            <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`} style={{ cursor: "pointer" }}>
+                                <span className="page-link border rounded-2 px-2.5 py-1.5" onClick={() => handlePageChange(currentPage - 1)}><i className="bi bi-arrow-left"></i></span>
+                            </li>
+                            {Array.from({ length: totalPages }).map((_, idx) => {
+                                const pageNumber = idx + 1;
+                                return (
+                                    <li key={pageNumber} className={`page-item ${currentPage === pageNumber ? 'active' : ''}`} style={{ cursor: "pointer" }}>
+                                        <span className="page-link border rounded-2 px-3 py-1.5 fw-bold" style={currentPage === pageNumber ? { backgroundColor: '#0AA586', borderColor: '#0AA586', color: '#fff' } : { color: '#4A5568' }} onClick={() => handlePageChange(pageNumber)}>{pageNumber}</span>
+                                    </li>
+                                );
+                            })}
+                            <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`} style={{ cursor: "pointer" }}>
+                                <span className="page-link border rounded-2 px-2.5 py-1.5" onClick={() => handlePageChange(currentPage + 1)}><i className="bi bi-arrow-right"></i></span>
+                            </li>
+                        </ul>
+                        </nav>
+                    </div>
+                </div>
+            )}
+
+        </div> 
+    </>
+  )
+}
+
+export default SaleProduct;

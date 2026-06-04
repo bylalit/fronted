@@ -16,6 +16,7 @@ import { useContext, useState } from 'react'
 import { Toaster } from 'react-hot-toast';
 import { AuthContext } from './context/AuthContext'
 import Loader from './components/Loader'
+import SaleProduct from './pages/SaleProduct'
 
 function App() {
 
@@ -45,6 +46,7 @@ function App() {
           <Route path='/' element={<Home />} />
           <Route path='/about' element={<About />} />
           <Route path='/category' element={<Category search={search} />} />
+          <Route path='/sale-product' element={<SaleProduct />} />
           <Route path='/productDetails/:id' element={<ProductDetails />} />
           <Route path='/cart' element={<Cart />} />
           <Route path='/checkout' element={<Checkout />} />

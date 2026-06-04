@@ -354,7 +354,7 @@ const Navbar = ({ setSearch }) => {
                 <Link className="nav-link" to="/category">Category</Link>
               </li>
               <li className="nav-item">
-                <Link className="nav-link" to="/category">Sale Product</Link>
+                <Link className="nav-link" to="/sale-product">Sale Product</Link>
               </li>
               <li className="nav-item">
                 <Link className="nav-link" to="/cart">Cart</Link>

@@ -1,19 +1,15 @@
 import { useContext, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom"; // 🆕 Route link redirection ke liye navigate hook use kiya
+import { useNavigate, Link } from "react-router-dom"; // Route link redirection ke liye navigate hook use kiya
 import { AuthContext } from "../../context/AuthContext";
 
 const FlashSale = () => {
-  const url = "http://127.0.0.1:8000/api/product/";
+  const url = "http://127.0.0.1:8000/api/product/?on_sale=true";
   const [saleProducts, setSaleProducts] = useState([]);
   const navigate = useNavigate();
   
-  // Context controllers se wishlist aur navigate actions fetch kiye
   const { setGlobalLoading, addToCart, wishlistItems, toggleWishlist } = useContext(AuthContext);
 
-  // COUNTDOWN TIMER LOCAL METADATA OBJECT STATE (For Top Banner)
   const [timeLeft, setTimeLeft] = useState({ days: "00", hours: "00", minutes: "00", seconds: "00" });
-
-  // STATE FOR INDIVIDUAL CARD COUNTDOWNS
   const [cardTimers, setCardTimers] = useState({});
 
   const getSaleProducts = async () => {
@@ -21,16 +17,9 @@ const FlashSale = () => {
     try {
       let response = await fetch(url);
       if (response.ok) {
-        const data = await response.json();
-        const allProducts = data.results || data;
-        
-        const activeDeals = allProducts.filter(
-          (product) => product.active_offer && product.active_offer.is_valid
-        );
-        
-        // Max 8 elements limit lagane ke liye array mapping splice range apply kiya
+        const data = await response.json();        
+        const activeDeals = data.results || data;        
         setSaleProducts(activeDeals.slice(0, 8));
-
       }
     } catch (error) {
       console.error("Error loading flash sale data array:", error);
@@ -48,7 +37,6 @@ const FlashSale = () => {
     navigate("/productDetails/" + id);
   };
 
-  // LIVE SYNC TIMER EFFECT FOR MAIN BANNER & INDIVIDUAL CARDS
   useEffect(() => {
     if (saleProducts.length === 0) return;
 
@@ -97,7 +85,7 @@ const FlashSale = () => {
     return () => clearInterval(interval);
   }, [saleProducts]);
 
-  // 🎯 FIX 3: Backend se real structural promo title extract logic
+  // Backend se real structural promo title extract logic
   const activeOfferTitle = saleProducts.length > 0 ? saleProducts[0].active_offer.title : "Flash Sale";
 
   return (
@@ -144,7 +132,6 @@ const FlashSale = () => {
                   className="badge px-3 py-2 fw-semibold mb-3 d-inline-flex align-items-center gap-1.5 text-uppercase" 
                   style={{ backgroundColor: 'rgba(10, 165, 134, 0.15)', color: '#0AA586', fontSize: '12px', letterSpacing: '0.5px' }}
                 >
-                  {/* 🎯 Real active continuous offer discount dynamic title text output */}
                   <i className="bi bi-lightning-charge-fill"></i> {activeOfferTitle} — Limited Time Offer
                 </span>
                 <h2 className="text-white fw-bold mb-3" style={{ fontSize: '32px' }}>
@@ -182,11 +169,11 @@ const FlashSale = () => {
               {/* Right Action Buttons Column */}
               <div className="col-12 col-md-auto d-flex flex-column gap-2 text-center text-md-start">
                 <button type="button" className="btn text-white px-4 py-2 fw-medium border-0 d-inline-flex align-items-center justify-content-center gap-2" style={{ backgroundColor: '#0AA586', borderRadius: '5px', fontSize: '14px' }}>
-                  <span>Claim Offer</span> <i className="bi bi-arrow-right"></i>
+                  <Link to="/sale-product" className="text-white text-decoration-none">Claim Offer</Link> <i className="bi bi-arrow-right"></i>
                 </button>
-                <button type="button" className="btn transparent text-white px-4 py-2 fw-medium border border-secondary border-opacity-50" style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', borderRadius: '5px', fontSize: '14px' }}>
+                <Link to="/sale-product" type="button" className="btn transparent text-white px-4 py-2 fw-medium border border-secondary border-opacity-50" style={{ backgroundColor: 'rgba(255, 255, 255, 0.05)', borderRadius: '5px', fontSize: '14px' }}>
                   View All Items
-                </button>
+                </Link>
               </div>
 
             </div>
@@ -205,12 +192,10 @@ const FlashSale = () => {
                 const primaryImgUrl = product.images?.find((img) => img.is_primary)?.image_url || product.images?.[0]?.image_url || "https://placeholder.com/240";
                 const discountLabel = `-${product.active_offer.discount_percentage}%`;
                 
-                // Real-time local verification checks for favorite node item checks
                 const isFavorite = wishlistItems?.some(item => item.product === product.id);
 
                 return (
                   <div className="col" key={product.id}>
-                    {/* Added anchor selector reference className rule trigger style hook links */}
                     <div className="card h-100 sale-card-frame border border-secondary border-opacity-25 rounded-3 overflow-hidden p-3" style={{ backgroundColor: '#14253f' }}>
                       
                       {/* Image Section Frame */}
@@ -229,7 +214,7 @@ const FlashSale = () => {
                           style={{ maxHeight: '150px' }} 
                         />
 
-                        {/* 🎯 FIX 2: Heart & Quick View dual icons layout floating action overlays block injection */}
+                        {/* Heart & Quick View dual icons layout floating action overlays */}
                         <div className="hover-action-layer position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center gap-2" style={{ backgroundColor: 'rgba(15, 30, 54, 0.65)' }}>
                           <button 
                             type="button" 

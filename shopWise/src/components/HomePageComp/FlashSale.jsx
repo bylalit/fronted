@@ -7,7 +7,7 @@ const FlashSale = () => {
   const [saleProducts, setSaleProducts] = useState([]);
   const navigate = useNavigate();
   
-  // 🎯 Context controllers se wishlist aur navigate actions fetch kiye
+  // Context controllers se wishlist aur navigate actions fetch kiye
   const { setGlobalLoading, addToCart, wishlistItems, toggleWishlist } = useContext(AuthContext);
 
   // COUNTDOWN TIMER LOCAL METADATA OBJECT STATE (For Top Banner)

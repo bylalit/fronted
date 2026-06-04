@@ -28,8 +28,9 @@ const FlashSale = () => {
           (product) => product.active_offer && product.active_offer.is_valid
         );
         
-        // 🎯 FIX 1: Max 8 elements limit lagane ke liye array mapping splice range apply kiya
+        // Max 8 elements limit lagane ke liye array mapping splice range apply kiya
         setSaleProducts(activeDeals.slice(0, 8));
+
       }
     } catch (error) {
       console.error("Error loading flash sale data array:", error);
@@ -37,6 +38,7 @@ const FlashSale = () => {
       setGlobalLoading(false);
     }
   };
+  
 
   useEffect(() => {
     getSaleProducts();

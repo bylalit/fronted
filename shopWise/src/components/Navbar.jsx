@@ -343,28 +343,28 @@ const Navbar = ({ setSearch }) => {
         <div className="container-fluid p-0">
           <div className="collapse navbar-collapse" id="navbarNavDropdown">
             <ul className="navbar-nav gap-3 align-items-center fw-medium" style={{ color: "#4A5568" }}>
-              <td className="nav-item">
+              <li className="nav-item">
                 <Link className="nav-link text-success active fw-semibold" to="/">Home</Link>
-              </td>
+              </li>
               
-              <td className="nav-item">
+              <li className="nav-item">
                 <Link className="nav-link" to="/about">About</Link>
-              </td>
-              <td className="nav-item">
+              </li>
+              <li className="nav-item">
                 <Link className="nav-link" to="/category">Category</Link>
-              </td>
-              <td className="nav-item">
+              </li>
+              <li className="nav-item">
                 <Link className="nav-link" to="/category">Sale Product</Link>
-              </td>
-              <td className="nav-item">
+              </li>
+              <li className="nav-item">
                 <Link className="nav-link" to="/cart">Cart</Link>
-              </td>
-              <td className="nav-item">
+              </li>
+              <li className="nav-item">
                 <Link className="nav-link" to="/checkout">Checkout</Link>
-              </td>
-              <td className="nav-item">
+              </li>
+              <li className="nav-item">
                 <Link className="nav-link" to="/contact">Contact</Link>
-              </td>
+              </li>
             </ul>
           </div>
         </div>

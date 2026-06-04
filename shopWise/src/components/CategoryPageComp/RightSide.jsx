@@ -406,7 +406,7 @@ const RightSide = ({search, category, setCategory, brand}) => {
                                                 {product.category_name}
                                             </span>
 
-                                            {/* 🎯 🆕 INLINE FLEX CONTAINER: Title ke samne countdown stopwatch clock display logic */}
+                                            
                                             <div className="d-flex align-items-center justify-content-between gap-2 mb-2">
                                                 <h5
                                                     className="fw-bold mb-0 text-dark product-title-clamp flex-grow-1"

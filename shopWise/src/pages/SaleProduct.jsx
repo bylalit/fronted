@@ -328,7 +328,7 @@ const SaleProduct = () => {
                                             </span>
                                         )}
 
-                                        <img src={product.images?.find((img) => img.is_primary)?.image_url || product.images?.[0]?.image_url || "https://placeholder.com/240"} alt={product.title} className="w-100 h-100" style={{ objectFit: 'contain', mixBlendMode: 'multiply' }} />
+                                        <img src={product.images?.find((img) => img.is_primary)?.image_url || product.images?.[0]?.image_url || "https://placeholder.com/240"} alt={product.title} className="w-100 h-100" style={{ mixBlendMode: 'multiply' }} />
 
                                         {/* Hover Interaction Overlay */}
                                         <div className="hover-actions position-absolute w-100 h-100 top-0 start-0 d-flex align-items-center justify-content-center gap-2 z-1" style={{ backgroundColor: 'rgba(15, 44, 89, 0.2)' }}>

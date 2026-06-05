@@ -28,7 +28,7 @@ const ProductDetails = () => {
 
   // 📦 1. Core Product Details Extraction
   const getProductDetails = async () => {
-    setGlobalLoading(true); // 🔄 Global dynamic glass filter loader on
+    setGlobalLoading(true); // Global dynamic glass filter loader on
     try {
       let response = await fetch(productUrl);
       response = await response.json();
@@ -52,11 +52,11 @@ const ProductDetails = () => {
     } catch (err) {
       console.error(err);
     } finally {
-      setGlobalLoading(false); // 🏁 Loader stopped safely
+      setGlobalLoading(false);
     }
   };
 
-  // 📦 2. Dynamic Reviews Filtering API Fetch
+  // Dynamic Reviews Filtering API Fetch
   const getProductReviews = async () => {
     try {
       const response = await fetch(reviewsUrl);
@@ -81,7 +81,7 @@ const ProductDetails = () => {
     }
   }, [selectedColor, selectedSize, product]);
 
-  // 📝 3. Submit Review Form Handler
+  // 3. Submit Review Form Handler
   const handleReviewSubmit = async (e) => {
     e.preventDefault();
     const token = localStorage.getItem("accessToken");
@@ -131,7 +131,7 @@ const ProductDetails = () => {
     getProductReviews(); 
   }, [id]);
 
-  // 🎯 🆕 LIVE BACKEND TICKING ENGINE FOR SINGLE PRODUCT DISCOUNT TIMES
+  // LIVE BACKEND TICKING ENGINE FOR SINGLE PRODUCT DISCOUNT TIMES
   useEffect(() => {
     if (!product?.active_offer || !product?.active_offer?.is_valid) return;
 
@@ -173,7 +173,7 @@ const ProductDetails = () => {
     new Map(availableVariants.filter(v => v.size_details).map(v => [v.size_details.id, v.size_details])).values()
   );
 
-  // 🧠 🆕 METADATA INTERFACE SWAPPER LOGIC FOR SPECIAL SALE PRICES
+  
   const hasOffer = product?.active_offer && product?.active_offer?.is_valid;
   
   // Base core calculations math

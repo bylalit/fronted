@@ -102,7 +102,7 @@ const Feedback = () => {
       <div className="d-flex flex-column gap-4">
         {feedbackList.map((item) => {
           
-          // 🎯 ACCURATE MODEL MATCH: ProductImage keys layout processing
+          // ACCURATE MODEL MATCH: ProductImage keys layout processing
           const productObj = item.product_details;
           
           // Aapke model ke hisab se hum 'is_primary' image ka 'image_url' nikalenge
@@ -122,7 +122,6 @@ const Feedback = () => {
                     className="border rounded-2 p-2 bg-light d-flex align-items-center justify-content-center mx-auto"   style={{ width: '75px', height: '75px', cursor:"pointer" }}
                     onClick={() => productShowData(item.product)} 
                   >
-                    {/* <h4>{finalProductImg}</h4> */}
                     <img 
                       src={finalProductImg} 
                       alt="Product offer thumbnail" 

@@ -35,7 +35,6 @@ const Navbar = ({ setSearch }) => {
         navigate("/productDetails/"+id);
     }
 
-  // Keyboard 'Enter' key press detect handler helper for search inputs
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
       searchProduct();

@@ -28,7 +28,6 @@ const FlashSale = () => {
     }
   };
   
-
   useEffect(() => {
     getSaleProducts();
   }, []);
@@ -90,7 +89,6 @@ const FlashSale = () => {
 
   return (
     <>
-      {/* Dynamic Floating Styles Injector Overlay Controls */}
       <style>{`
         .sale-card-frame .hover-action-layer {
           opacity: 0;

@@ -28,7 +28,7 @@ function App() {
         <Toaster 
         position="top-right" 
         toastOptions={{
-          duration: 3000, // 3.5 seconds baad automatic gayab ho jayega
+          duration: 3000, 
           style: {
             background: '#ffffff',
             color: '#333333',

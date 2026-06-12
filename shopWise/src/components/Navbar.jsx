@@ -70,6 +70,7 @@ const Navbar = ({ setSearch }) => {
     return () => document.removeEventListener("mousedown", handleOutsideClick);
   }, []);
 
+  
   return (
     <header className="w-100 font-sans shadow-sm">
       {/* 1. TOP UTILITY BAR */}

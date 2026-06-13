@@ -43,7 +43,7 @@ const Feedback = () => {
     }
   };
 
-  // 2. REMOVE FEEDBACK REVIEW RECORD HANDLER
+  // 2. REMOVE FEEDBACK  RECORD HANDLER
   const handleDeleteFeedback = async (id) => {
     const token = localStorage.getItem("accessToken");
     if (!token) {
@@ -88,7 +88,7 @@ const Feedback = () => {
 
   return (
     <div>
-      {/* Upper Actions Toolbar Title Block */}
+      {/* Upper Actions Toolbar Title */}
       <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
         <h3 className="fw-bold mb-0 text-dark" style={{ color: '#0F2C59', fontSize: '22px' }}>
           My Feedback ({feedbackList.length})

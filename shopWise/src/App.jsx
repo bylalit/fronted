@@ -23,6 +23,7 @@ function App() {
   const [search, setSearch] = useState("")
   const { globalLoading } = useContext(AuthContext);
 
+
   return (
     <>
         <Toaster 
@@ -61,4 +62,3 @@ function App() {
 }
 
 export default App
-

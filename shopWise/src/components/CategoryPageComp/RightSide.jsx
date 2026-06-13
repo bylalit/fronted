@@ -518,5 +518,4 @@ const RightSide = ({search, category, setCategory, brand}) => {
   )
 }
 
-
 export default RightSide;

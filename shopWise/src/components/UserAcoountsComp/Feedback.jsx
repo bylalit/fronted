@@ -13,7 +13,7 @@ const Feedback = () => {
   const { setGlobalLoading, userProfile } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  // 📦 1. FETCH REVIEWS PIPELINE FROM BACKEND
+  // 1. FETCH REVIEWS PIPELINE FROM BACKEND
   const getMyFeedback = async () => {
     const token = localStorage.getItem("accessToken");
     if (!token) return;
